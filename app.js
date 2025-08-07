@@ -357,6 +357,16 @@ function App() {
         }
     };
 
+    const formatArtistName = (artists) => {
+        if (!artists || !Array.isArray(artists)) return 'Unknown Artist';
+        
+        return artists.map(artist => {
+            const name = artist.anv || artist.name;
+            const join = artist.join || '';
+            return join ? `${name} ${join}` : name;
+        }).join(' ').trim();
+    };
+
     const loadTestRelease = async () => {
         setLoading(true);
         setRelease(null);
@@ -364,7 +374,8 @@ function App() {
         setStatus({ type: 'loading', message: 'Loading test release...' });
         
         try {
-            const releaseDetails = await getReleaseDetails(259764, token || null);
+            const releaseDetails = await getReleaseDetails(955195, token || null);
+            console.log('Artists data:', releaseDetails.artists);
             const extractedVideos = extractYouTubeVideos(releaseDetails);
             
             setRelease(releaseDetails);
@@ -431,14 +442,15 @@ function App() {
                 
                 <div className="header-release">
                     {release ? (
-                        <>
-                            <div className="header-release-title">
+                        <div className="header-release-title">
+                            <span style={{color: '#667eea', fontWeight: '500'}}>
+                                {formatArtistName(release.artists)}
+                            </span>
+                            <span style={{margin: '0 8px', color: '#999'}}> - </span>
+                            <span>
                                 {release.title || 'Unknown Title'}
-                            </div>
-                            <div className="header-release-artist">
-                                {release.artists ? release.artists.map(a => a.name).join(', ') : 'Unknown Artist'}
-                            </div>
-                        </>
+                            </span>
+                        </div>
                     ) : (
                         <div className="header-release-title" style={{color: '#999'}}>
                             No release selected
@@ -495,7 +507,7 @@ function App() {
                             }}
                         />
                     ) : (
-                        <div style={{width: '120px', height: '120px', background: '#f0f0f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999'}}>
+                        <div style={{width: '160px', height: '160px', background: '#f0f0f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999'}}>
                             No Cover
                         </div>
                     )}
