@@ -382,47 +382,123 @@ function App() {
     return (
         <div className="container">
             <div className="header">
-                <h1>🎵 Discogs Video Player</h1>
-                <div className="controls">
-                    <div className="user-row">
-                        <div className="input-group">
-                            <label htmlFor="username">Username:</label>
-                            <input
-                                type="text"
-                                id="username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                placeholder="Username"
-                            />
+                <div className="header-controls">
+                    <h1>🎵 Discogs Video Player</h1>
+                    <div className="controls">
+                        <div className="user-row">
+                            <div className="input-group">
+                                <label htmlFor="username">Username:</label>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    placeholder="Username"
+                                />
+                            </div>
                         </div>
-                        <button 
-                            className="btn" 
-                            onClick={getRandomReleaseWithVideos}
-                            disabled={loading}
-                        >
-                            {loading ? '🔄 Searching...' : '🎲 Random'}
-                        </button>
-                    </div>
-                    <div className="token-row">
-                        <div className="input-group">
-                            <label htmlFor="token">API Token:</label>
-                            <input
-                                type="text"
-                                id="token"
-                                value={token}
-                                onChange={(e) => setToken(e.target.value)}
-                                placeholder="Token"
-                            />
+                        <div className="token-row">
+                            <div className="input-group">
+                                <label htmlFor="token">API Token:</label>
+                                <input
+                                    type="text"
+                                    id="token"
+                                    value={token}
+                                    onChange={(e) => setToken(e.target.value)}
+                                    placeholder="Token"
+                                />
+                            </div>
                         </div>
-                        <button 
-                            className="btn test-button" 
-                            onClick={loadTestRelease}
-                            disabled={loading}
-                            style={{background: '#e67e22'}}
-                        >
-                            🧪 Test
-                        </button>
+                        <div className="button-row">
+                            <button 
+                                className="btn" 
+                                onClick={getRandomReleaseWithVideos}
+                                disabled={loading}
+                            >
+                                {loading ? '🔄' : '🎲 Random'}
+                            </button>
+                            <button 
+                                className="btn test-button" 
+                                onClick={loadTestRelease}
+                                disabled={loading}
+                                style={{background: '#e67e22'}}
+                            >
+                                🧪 Test
+                            </button>
+                        </div>
                     </div>
+                </div>
+                
+                <div className="header-release">
+                    {release ? (
+                        <>
+                            <div className="header-release-title">
+                                {release.title || 'Unknown Title'}
+                            </div>
+                            <div className="header-release-artist">
+                                {release.artists ? release.artists.map(a => a.name).join(', ') : 'Unknown Artist'}
+                            </div>
+                        </>
+                    ) : (
+                        <div className="header-release-title" style={{color: '#999'}}>
+                            No release selected
+                        </div>
+                    )}
+                </div>
+                
+                <div className="header-cover">
+                    {release && release.images && release.images.length > 0 ? (
+                        <img 
+                            src={release.images[0].uri} 
+                            alt="Release cover"
+                            onLoad={() => {
+                                const hash = release.images[0].uri.split('').reduce((a, b) => {
+                                    a = ((a << 5) - a) + b.charCodeAt(0);
+                                    return a & a;
+                                }, 0);
+                                
+                                let r = Math.abs(hash) % 256;
+                                let g = Math.abs(hash >> 8) % 256;
+                                let b = Math.abs(hash >> 16) % 256;
+                                
+                                const isRedDominant = r > g + 20 && r > b + 20;
+                                const isGreenDominant = g > r + 20 && g > b + 20;
+                                const isBlueDominant = b > r + 20 && b > g + 20;
+                                
+                                if (isRedDominant) {
+                                    document.body.style.background = 'linear-gradient(135deg, rgb(255, 200, 200) 0%, rgb(139, 0, 0) 100%)';
+                                    return;
+                                }
+                                
+                                if (isGreenDominant) {
+                                    document.body.style.background = 'linear-gradient(135deg, rgb(200, 240, 200) 0%, rgb(60, 120, 60) 100%)';
+                                    return;
+                                }
+                                
+                                if (isBlueDominant) {
+                                    document.body.style.background = 'linear-gradient(135deg, rgb(200, 220, 255) 0%, rgb(0, 60, 139) 100%)';
+                                    return;
+                                }
+                                
+                                const isMonochrome = Math.abs(r - g) < 15 && Math.abs(g - b) < 15 && Math.abs(r - b) < 15;
+                                const isTooLight = (r + g + b) / 3 > 220;
+                                const isTooDark = (r + g + b) / 3 < 60;
+                                const isGrey = isMonochrome && (r + g + b) / 3 > 80 && (r + g + b) / 3 < 180;
+                                
+                                if (isMonochrome || isTooLight || isTooDark || isGrey) {
+                                    document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                                } else {
+                                    const color1 = `rgb(${r}, ${g}, ${b})`;
+                                    const color2 = `rgb(${Math.max(30, r - 60)}, ${Math.max(30, g - 60)}, ${Math.max(30, b - 60)})`;
+                                    document.body.style.background = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+                                }
+                            }}
+                        />
+                    ) : (
+                        <div style={{width: '120px', height: '120px', background: '#f0f0f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999'}}>
+                            No Cover
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -433,79 +509,7 @@ function App() {
             )}
 
             {release && (
-                <div>
-                    {release.images && release.images.length > 0 && (
-                        <div className="cover-art-container">
-                            <img 
-                                src={release.images[0].uri} 
-                                alt="Release cover"
-onLoad={() => {
-                                    const hash = release.images[0].uri.split('').reduce((a, b) => {
-                                        a = ((a << 5) - a) + b.charCodeAt(0);
-                                        return a & a;
-                                    }, 0);
-                                    
-                                    let r = Math.abs(hash) % 256;
-                                    let g = Math.abs(hash >> 8) % 256;
-                                    let b = Math.abs(hash >> 16) % 256;
-                                    
-                                    console.log('DEBUG: Image URL:', release.images[0].uri);
-                                    console.log('DEBUG: Hash:', hash);
-                                    console.log('DEBUG: RGB values:', r, g, b);
-                                    
-                                    // Detect dominant color and create appropriate gradients
-                                    const isRedDominant = r > g + 20 && r > b + 20;
-                                    const isGreenDominant = g > r + 20 && g > b + 20;
-                                    const isBlueDominant = b > r + 20 && b > g + 20;
-                                    
-                                    if (isRedDominant) {
-                                        document.body.style.background = 'linear-gradient(135deg, rgb(255, 200, 200) 0%, rgb(139, 0, 0) 100%)';
-                                        return;
-                                    }
-                                    
-                                    if (isGreenDominant) {
-                                        document.body.style.background = 'linear-gradient(135deg, rgb(200, 240, 200) 0%, rgb(60, 120, 60) 100%)';
-                                        return;
-                                    }
-                                    
-                                    if (isBlueDominant) {
-                                        document.body.style.background = 'linear-gradient(135deg, rgb(200, 220, 255) 0%, rgb(0, 60, 139) 100%)';
-                                        return;
-                                    }
-                                    
-                                    // Check for problematic color combinations
-                                    const isMonochrome = Math.abs(r - g) < 15 && Math.abs(g - b) < 15 && Math.abs(r - b) < 15;
-                                    const isTooLight = (r + g + b) / 3 > 220;
-                                    const isTooDark = (r + g + b) / 3 < 60;
-                                    const isGrey = isMonochrome && (r + g + b) / 3 > 80 && (r + g + b) / 3 < 180;
-                                    
-                                    console.log('DEBUG: RGB:', r, g, b, 'isMonochrome:', isMonochrome, 'isTooLight:', isTooLight, 'isTooDark:', isTooDark, 'isGrey:', isGrey);
-                                    
-                                    if (isMonochrome || isTooLight || isTooDark || isGrey) {
-                                        console.log('DEBUG: Using default gradient');
-                                        document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                                    } else {
-                                        const color1 = `rgb(${r}, ${g}, ${b})`;
-                                        const color2 = `rgb(${Math.max(30, r - 60)}, ${Math.max(30, g - 60)}, ${Math.max(30, b - 60)})`;
-                                        
-                                        console.log('DEBUG: Using custom gradient:', color1, 'to', color2);
-                                        document.body.style.background = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
-                                    }
-                                }}
-                            />
-                        </div>
-                    )}
-                    <div className="release-card">
-                        <div className="release-header">
-                            <div className="release-text">
-                                <div className="release-title">
-                                    {release.artists ? release.artists.map(a => a.name).join(', ') : 'Unknown Artist'} - {release.title || 'Unknown Title'}
-                                </div>
-                                <div>
-                                    {release.year || 'Unknown Year'} • {release.labels ? release.labels.map(l => l.name).join(', ') : 'Unknown Label'}
-                                </div>
-                            </div>
-                        </div>
+                <div className="release-card">
 
                     <div className="release-content">
                         <div className="release-info">
@@ -694,7 +698,6 @@ onLoad={() => {
                                 </div>
                             </div>
                         )}
-                    </div>
                     </div>
                 </div>
             )}
