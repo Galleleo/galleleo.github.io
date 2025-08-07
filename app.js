@@ -1,8 +1,8 @@
 const { useState, useEffect, useCallback, useRef } = React;
 
 function App() {
-    const [username, setUsername] = useState('Galleleo');
-    const [token, setToken] = useState('');
+    const [username, setUsername] = useState(localStorage.getItem('discogs-username') || 'Galleleo');
+    const [token, setToken] = useState(localStorage.getItem('discogs-token') || '');
     const [status, setStatus] = useState('');
     const [release, setRelease] = useState(null);
     const [videos, setVideos] = useState([]);
@@ -13,10 +13,10 @@ function App() {
     const [ratingStatus, setRatingStatus] = useState('');
     const [players, setPlayers] = useState([]);
     const playersRef = useRef([]);
-    const [autoplay, setAutoplay] = useState(true);
-    const [shuffle, setShuffle] = useState(false);
-    const [continuousPlay, setContinuousPlay] = useState(false);
-    const [randomNext, setRandomNext] = useState(false);
+    const [autoplay, setAutoplay] = useState(localStorage.getItem('autoplay') === 'true' || localStorage.getItem('autoplay') === null);
+    const [shuffle, setShuffle] = useState(localStorage.getItem('shuffle') === 'true');
+    const [continuousPlay, setContinuousPlay] = useState(localStorage.getItem('continuousPlay') === 'true');
+    const [randomNext, setRandomNext] = useState(localStorage.getItem('randomNext') === 'true');
     const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
     const [playedVideos, setPlayedVideos] = useState(new Set());
 
@@ -226,6 +226,14 @@ function App() {
                     setPlayedVideos(new Set());
                     setStatus({ type: '', message: '' });
                     setLoading(false);
+                    
+                    // Trigger autoplay for new release
+                    if (autoplay) {
+                        setTimeout(() => {
+                            const startIndex = shuffle ? Math.floor(Math.random() * extractedVideos.length) : 0;
+                            setCurrentVideoIndex(startIndex);
+                        }, 100);
+                    }
                     return;
                 }
 
@@ -519,7 +527,10 @@ function App() {
                                     type="text"
                                     id="username"
                                     value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
+                                    onChange={(e) => {
+                                        setUsername(e.target.value);
+                                        localStorage.setItem('discogs-username', e.target.value);
+                                    }}
                                     placeholder="Username"
                                 />
                             </div>
@@ -531,7 +542,10 @@ function App() {
                                     type="text"
                                     id="token"
                                     value={token}
-                                    onChange={(e) => setToken(e.target.value)}
+                                    onChange={(e) => {
+                                        setToken(e.target.value);
+                                        localStorage.setItem('discogs-token', e.target.value);
+                                    }}
                                     placeholder="Token"
                                 />
                             </div>
@@ -559,7 +573,10 @@ function App() {
                                     type="checkbox" 
                                     id="autoplay" 
                                     checked={autoplay} 
-                                    onChange={(e) => setAutoplay(e.target.checked)}
+                                    onChange={(e) => {
+                                        setAutoplay(e.target.checked);
+                                        localStorage.setItem('autoplay', e.target.checked);
+                                    }}
                                 />
                                 <label htmlFor="autoplay">Autoplay</label>
                             </div>
@@ -568,7 +585,10 @@ function App() {
                                     type="checkbox" 
                                     id="shuffle" 
                                     checked={shuffle} 
-                                    onChange={(e) => setShuffle(e.target.checked)}
+                                    onChange={(e) => {
+                                        setShuffle(e.target.checked);
+                                        localStorage.setItem('shuffle', e.target.checked);
+                                    }}
                                 />
                                 <label htmlFor="shuffle">Shuffle</label>
                             </div>
@@ -577,7 +597,10 @@ function App() {
                                     type="checkbox" 
                                     id="continuous" 
                                     checked={continuousPlay} 
-                                    onChange={(e) => setContinuousPlay(e.target.checked)}
+                                    onChange={(e) => {
+                                        setContinuousPlay(e.target.checked);
+                                        localStorage.setItem('continuousPlay', e.target.checked);
+                                    }}
                                 />
                                 <label htmlFor="continuous">Continuous</label>
                             </div>
@@ -586,7 +609,10 @@ function App() {
                                     type="checkbox" 
                                     id="randomNext" 
                                     checked={randomNext} 
-                                    onChange={(e) => setRandomNext(e.target.checked)}
+                                    onChange={(e) => {
+                                        setRandomNext(e.target.checked);
+                                        localStorage.setItem('randomNext', e.target.checked);
+                                    }}
                                 />
                                 <label htmlFor="randomNext">Random Next</label>
                             </div>
@@ -858,7 +884,7 @@ function App() {
                                                 <iframe
                                                     id={`iframe-${video.id}`}
                                                     className="video-iframe"
-                                                    src={`https://www.youtube.com/embed/${video.id}?enablejsapi=1`}
+                                                    src={`https://www.youtube.com/embed/${video.id}?enablejsapi=1&origin=${window.location.origin}`}
                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                     allowFullScreen
                                                 ></iframe>
