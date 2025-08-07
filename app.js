@@ -11,6 +11,47 @@ function App() {
     const [collectionCache, setCollectionCache] = useState(null);
     const [rating, setRating] = useState(0);
     const [ratingStatus, setRatingStatus] = useState('');
+    const [players, setPlayers] = useState([]);
+
+    useEffect(() => {
+        if (!window.YT) {
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+            
+            window.onYouTubeIframeAPIReady = () => {
+                initializePlayers();
+            };
+        } else {
+            initializePlayers();
+        }
+    }, [videos]);
+
+    const initializePlayers = () => {
+        const newPlayers = [];
+        videos.forEach((video, index) => {
+            const iframeId = `iframe-${video.id}`;
+            if (document.getElementById(iframeId)) {
+                const player = new window.YT.Player(iframeId, {
+                    events: {
+                        'onStateChange': (event) => {
+                            if (event.data === window.YT.PlayerState.PLAYING) {
+                                newPlayers.forEach((p) => {
+                                    if (p.getPlayerState() === window.YT.PlayerState.PLAYING && 
+                                        p.getIframe().id !== event.target.getIframe().id) {
+                                        p.pauseVideo();
+                                    }
+                                });
+                            }
+                        }
+                    }
+                });
+                newPlayers.push(player);
+            }
+        });
+        setPlayers(newPlayers);
+    };
 
     const fetchDiscogs = async (url, token = null) => {
         const headers = { 'User-Agent': 'DiscogsCollectionVideoPlayer/1.0' };
@@ -450,6 +491,9 @@ function App() {
                             <span>
                                 {release.title || 'Unknown Title'}
                             </span>
+                            <div style={{fontSize: '0.9rem', color: '#888', marginTop: '4px'}}>
+                                {release.year || 'Unknown Year'} • {release.labels ? release.labels.map(l => l.name).join(', ') : 'Unknown Label'}
+                            </div>
                         </div>
                     ) : (
                         <div className="header-release-title" style={{color: '#999'}}>
@@ -699,8 +743,9 @@ function App() {
                                                     </div>
                                                 </div>
                                                 <iframe
+                                                    id={`iframe-${video.id}`}
                                                     className="video-iframe"
-                                                    src={`https://www.youtube.com/embed/${video.id}${index === 0 ? '?autoplay=1' : ''}`}
+                                                    src={`https://www.youtube.com/embed/${video.id}?enablejsapi=1`}
                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                     allowFullScreen
                                                 ></iframe>

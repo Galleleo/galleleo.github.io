@@ -335,6 +335,12 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.video-header:hover {
+    background: #e6eaff;
 }
 
 .video-title {
