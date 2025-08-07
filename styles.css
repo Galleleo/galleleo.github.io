@@ -31,7 +31,7 @@ body {
 
 .header {
     position: fixed;
-    width: 14%;
+    width: 15%;
     top: 15px;
     left: 40px;
     z-index: 1000;
@@ -81,7 +81,7 @@ body {
 }
 
 .input-group input {
-    width: 210px;
+    width: 80%;
     padding: 5px 6px;
     border: 1px solid #e1e5e9;
     border-radius: 4px;
