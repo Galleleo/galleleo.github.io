@@ -1,4 +1,4 @@
-const { useState, useEffect } = React;
+const { useState, useEffect, useCallback, useRef } = React;
 
 function App() {
     const [username, setUsername] = useState('Galleleo');
@@ -12,6 +12,60 @@ function App() {
     const [rating, setRating] = useState(0);
     const [ratingStatus, setRatingStatus] = useState('');
     const [players, setPlayers] = useState([]);
+    const playersRef = useRef([]);
+    const [autoplay, setAutoplay] = useState(true);
+    const [shuffle, setShuffle] = useState(false);
+    const [continuousPlay, setContinuousPlay] = useState(false);
+    const [randomNext, setRandomNext] = useState(false);
+    const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+    const [playedVideos, setPlayedVideos] = useState(new Set());
+
+    const handleVideoEnd = useCallback(() => {
+        console.log('handleVideoEnd called, currentVideoIndex:', currentVideoIndex, 'videos.length:', videos.length);
+        console.log('Shuffle:', shuffle, 'Random Next:', randomNext);
+        
+        let nextIndex;
+        if (shuffle) {
+            const newPlayedVideos = new Set(playedVideos);
+            newPlayedVideos.add(currentVideoIndex);
+            setPlayedVideos(newPlayedVideos);
+            
+            if (newPlayedVideos.size >= videos.length) {
+                // All videos played with shuffle
+                if (randomNext) {
+                    getRandomReleaseWithVideos();
+                    return;
+                } else {
+                    setPlayedVideos(new Set());
+                    nextIndex = Math.floor(Math.random() * videos.length);
+                }
+            } else {
+                const unplayedVideos = videos.map((_, i) => i).filter(i => !newPlayedVideos.has(i));
+                nextIndex = unplayedVideos[Math.floor(Math.random() * unplayedVideos.length)];
+            }
+        } else {
+            // Sequential play
+            nextIndex = currentVideoIndex + 1;
+            if (nextIndex >= videos.length) {
+                // We're at the last video
+                if (randomNext) {
+                    getRandomReleaseWithVideos();
+                    return;
+                } else {
+                    nextIndex = 0; // Loop back to first video
+                }
+            }
+        }
+        
+        console.log('Next video index:', nextIndex, 'players available:', playersRef.current.length);
+        if (nextIndex !== undefined && playersRef.current[nextIndex]) {
+            setCurrentVideoIndex(nextIndex);
+            setTimeout(() => {
+                console.log('Playing next video at index:', nextIndex);
+                playersRef.current[nextIndex].playVideo();
+            }, 500);
+        }
+    }, [currentVideoIndex, videos, playedVideos, shuffle, randomNext]);
 
     useEffect(() => {
         if (!window.YT) {
@@ -37,12 +91,21 @@ function App() {
                     events: {
                         'onStateChange': (event) => {
                             if (event.data === window.YT.PlayerState.PLAYING) {
+                                // Update current video index
+                                const playingIndex = videos.findIndex(v => `iframe-${v.id}` === event.target.getIframe().id);
+                                if (playingIndex !== -1) setCurrentVideoIndex(playingIndex);
+                                
                                 newPlayers.forEach((p) => {
                                     if (p.getPlayerState() === window.YT.PlayerState.PLAYING && 
                                         p.getIframe().id !== event.target.getIframe().id) {
                                         p.pauseVideo();
                                     }
                                 });
+                            } else if (event.data === window.YT.PlayerState.ENDED) {
+                                console.log('Video ended, continuous play:', continuousPlay);
+                                if (continuousPlay) {
+                                    handleVideoEnd();
+                                }
                             }
                         }
                     }
@@ -51,6 +114,16 @@ function App() {
             }
         });
         setPlayers(newPlayers);
+        playersRef.current = newPlayers;
+        
+        // Auto-start first video if autoplay is enabled
+        if (autoplay && newPlayers.length > 0 && videos.length > 0) {
+            setTimeout(() => {
+                const startIndex = shuffle ? Math.floor(Math.random() * videos.length) : 0;
+                setCurrentVideoIndex(startIndex);
+                newPlayers[startIndex]?.playVideo();
+            }, 1000);
+        }
     };
 
     const fetchDiscogs = async (url, token = null) => {
@@ -149,6 +222,8 @@ function App() {
                     setVideos(loadSavedOrder(extractedVideos, releaseDetails.id));
                     setCollectionItem(randomRelease);
                     setRating(randomRelease.rating || 0);
+                    setCurrentVideoIndex(0);
+                    setPlayedVideos(new Set());
                     setStatus({ type: '', message: '' });
                     setLoading(false);
                     return;
@@ -313,7 +388,7 @@ function App() {
 
     const updateRating = async (newRating) => {
         if (!collectionItem?.instance_id || !token) {
-            setStatus({ type: 'error', message: 'Token required to update rating' });
+            setStatus({ type: 'error', message: 'Token required to update rating. Get yours at https://www.discogs.com/settings/developers' });
             return;
         }
 
@@ -415,7 +490,7 @@ function App() {
         setStatus({ type: 'loading', message: 'Loading test release...' });
         
         try {
-            const releaseDetails = await getReleaseDetails(955195, token || null);
+            const releaseDetails = await getReleaseDetails(231953, token || null);
             console.log('Artists data:', releaseDetails.artists);
             const extractedVideos = extractYouTubeVideos(releaseDetails);
             
@@ -477,6 +552,44 @@ function App() {
                             >
                                 🧪 Test
                             </button>
+                        </div>
+                        <div className="options-row">
+                            <div className="checkbox-group">
+                                <input 
+                                    type="checkbox" 
+                                    id="autoplay" 
+                                    checked={autoplay} 
+                                    onChange={(e) => setAutoplay(e.target.checked)}
+                                />
+                                <label htmlFor="autoplay">Autoplay</label>
+                            </div>
+                            <div className="checkbox-group">
+                                <input 
+                                    type="checkbox" 
+                                    id="shuffle" 
+                                    checked={shuffle} 
+                                    onChange={(e) => setShuffle(e.target.checked)}
+                                />
+                                <label htmlFor="shuffle">Shuffle</label>
+                            </div>
+                            <div className="checkbox-group">
+                                <input 
+                                    type="checkbox" 
+                                    id="continuous" 
+                                    checked={continuousPlay} 
+                                    onChange={(e) => setContinuousPlay(e.target.checked)}
+                                />
+                                <label htmlFor="continuous">Continuous</label>
+                            </div>
+                            <div className="checkbox-group">
+                                <input 
+                                    type="checkbox" 
+                                    id="randomNext" 
+                                    checked={randomNext} 
+                                    onChange={(e) => setRandomNext(e.target.checked)}
+                                />
+                                <label htmlFor="randomNext">Random Next</label>
+                            </div>
                         </div>
                     </div>
                 </div>
