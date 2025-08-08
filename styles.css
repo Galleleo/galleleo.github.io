@@ -7,6 +7,10 @@ body {
     color: #333;
 }
 
+.blurred-background {
+    transition: opacity 1s ease-in-out;
+}
+
 .container { 
     max-width: 1600px; 
     margin: 0 auto; 

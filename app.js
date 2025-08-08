@@ -647,14 +647,10 @@ function App() {
                             src={release.images[0].uri} 
                             alt="Release cover"
                             onLoad={() => {
-                                // Remove existing background elements
-                                const existingBg = document.querySelector('.blurred-background');
-                                if (existingBg) existingBg.remove();
-                                
-                                // Create blurred background element
-                                const bgElement = document.createElement('div');
-                                bgElement.className = 'blurred-background';
-                                bgElement.style.cssText = `
+                                // Create new background element
+                                const newBgElement = document.createElement('div');
+                                newBgElement.className = 'blurred-background';
+                                newBgElement.style.cssText = `
                                     position: fixed;
                                     top: -10%;
                                     left: -10%;
@@ -667,8 +663,22 @@ function App() {
                                     filter: blur(20px);
                                     z-index: -2;
                                     pointer-events: none;
+                                    opacity: 0;
                                 `;
-                                document.body.appendChild(bgElement);
+                                document.body.appendChild(newBgElement);
+                                
+                                // Fade in new background
+                                setTimeout(() => {
+                                    newBgElement.style.opacity = '1';
+                                }, 50);
+                                
+                                // Remove old background after transition
+                                const existingBgs = document.querySelectorAll('.blurred-background');
+                                if (existingBgs.length > 1) {
+                                    setTimeout(() => {
+                                        existingBgs[0].remove();
+                                    }, 1000);
+                                }
                                 
                                 // Add overlay for better readability
                                 const overlay = document.querySelector('.background-overlay') || document.createElement('div');
