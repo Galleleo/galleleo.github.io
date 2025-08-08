@@ -647,46 +647,50 @@ function App() {
                             src={release.images[0].uri} 
                             alt="Release cover"
                             onLoad={() => {
-                                const hash = release.images[0].uri.split('').reduce((a, b) => {
-                                    a = ((a << 5) - a) + b.charCodeAt(0);
-                                    return a & a;
-                                }, 0);
+                                // Remove existing background elements
+                                const existingBg = document.querySelector('.blurred-background');
+                                if (existingBg) existingBg.remove();
                                 
-                                let r = Math.abs(hash) % 256;
-                                let g = Math.abs(hash >> 8) % 256;
-                                let b = Math.abs(hash >> 16) % 256;
+                                // Create blurred background element
+                                const bgElement = document.createElement('div');
+                                bgElement.className = 'blurred-background';
+                                bgElement.style.cssText = `
+                                    position: fixed;
+                                    top: -10%;
+                                    left: -10%;
+                                    width: 120%;
+                                    height: 120%;
+                                    background-image: url(${release.images[0].uri});
+                                    background-size: cover;
+                                    background-position: center;
+                                    background-repeat: no-repeat;
+                                    filter: blur(20px);
+                                    z-index: -2;
+                                    pointer-events: none;
+                                `;
+                                document.body.appendChild(bgElement);
                                 
-                                const isRedDominant = r > g + 20 && r > b + 20;
-                                const isGreenDominant = g > r + 20 && g > b + 20;
-                                const isBlueDominant = b > r + 20 && b > g + 20;
-                                
-                                if (isRedDominant) {
-                                    document.body.style.background = 'linear-gradient(135deg, rgb(255, 200, 200) 0%, rgb(139, 0, 0) 100%)';
-                                    return;
+                                // Add overlay for better readability
+                                const overlay = document.querySelector('.background-overlay') || document.createElement('div');
+                                overlay.className = 'background-overlay';
+                                overlay.style.cssText = `
+                                    position: fixed;
+                                    top: 0;
+                                    left: 0;
+                                    width: 100%;
+                                    height: 100%;
+                                    background: rgba(0, 0, 0, 0.4);
+                                    z-index: -1;
+                                    pointer-events: none;
+                                `;
+                                if (!document.querySelector('.background-overlay')) {
+                                    document.body.appendChild(overlay);
                                 }
                                 
-                                if (isGreenDominant) {
-                                    document.body.style.background = 'linear-gradient(135deg, rgb(200, 240, 200) 0%, rgb(60, 120, 60) 100%)';
-                                    return;
-                                }
-                                
-                                if (isBlueDominant) {
-                                    document.body.style.background = 'linear-gradient(135deg, rgb(200, 220, 255) 0%, rgb(0, 60, 139) 100%)';
-                                    return;
-                                }
-                                
-                                const isMonochrome = Math.abs(r - g) < 15 && Math.abs(g - b) < 15 && Math.abs(r - b) < 15;
-                                const isTooLight = (r + g + b) / 3 > 220;
-                                const isTooDark = (r + g + b) / 3 < 60;
-                                const isGrey = isMonochrome && (r + g + b) / 3 > 80 && (r + g + b) / 3 < 180;
-                                
-                                if (isMonochrome || isTooLight || isTooDark || isGrey) {
-                                    document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                                } else {
-                                    const color1 = `rgb(${r}, ${g}, ${b})`;
-                                    const color2 = `rgb(${Math.max(30, r - 60)}, ${Math.max(30, g - 60)}, ${Math.max(30, b - 60)})`;
-                                    document.body.style.background = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
-                                }
+                                // Reset body styles
+                                document.body.style.background = 'transparent';
+                                document.body.style.filter = 'none';
+                                document.body.style.transform = 'none';
                             }}
                         />
                     ) : (
