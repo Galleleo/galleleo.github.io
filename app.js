@@ -136,7 +136,6 @@ function App() {
                 
                 if (response.status === 429) {
                     const delay = Math.pow(2, i) * 1000; // Exponential backoff
-                    console.log(`Rate limited, waiting ${delay}ms before retry ${i + 1}/${retries}`);
                     await new Promise(resolve => setTimeout(resolve, delay));
                     continue;
                 }
@@ -154,7 +153,6 @@ function App() {
                 if (i === retries - 1) throw error;
                 
                 const delay = Math.pow(2, i) * 1000;
-                console.log(`Request failed, retrying in ${delay}ms...`);
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
@@ -327,12 +325,8 @@ function App() {
             .replace(/\.(mp4|avi|mov|wmv|flv|webm)$/i, '')
             .trim();
         
-        const releaseArtist = release.artists ? release.artists.map(a => a.name).join(', ') : '';
-        
-        // Normalize remix/mix for comparison
-        const normalizeRemixMix = (text) => {
-            return text.replace(/\b(remix|mix)\b/gi, 'remix');
-        };
+        // For Various Artists releases, try to match individual track artists
+        const isVariousArtists = release.artists && release.artists.some(a => a.name.toLowerCase().includes('various'));
         
         let bestMatch = null;
         let bestScore = 0;
@@ -340,61 +334,104 @@ function App() {
         tracklist.forEach(track => {
             if (!track.title) return;
             
-            // Construct expected video title: Artist - Track Title
-            const expectedTitle = `${releaseArtist} - ${track.title}`;
+            // For Various Artists, use track-specific artist if available
+            let expectedTitle;
+            if (isVariousArtists && track.artists && track.artists.length > 0) {
+                const trackArtist = track.artists.map(a => a.name).join(', ');
+                expectedTitle = `${trackArtist} - ${track.title}`;
+            } else {
+                const releaseArtist = release.artists ? release.artists.map(a => a.name).join(', ') : '';
+                expectedTitle = `${releaseArtist} - ${track.title}`;
+            }
             
-            // Normalize both titles for remix/mix comparison
-            const normalizedVideo = normalizeRemixMix(cleanedTitle.toLowerCase());
-            const normalizedExpected = normalizeRemixMix(expectedTitle.toLowerCase());
+            // Normalize both titles
+            const normalizedVideo = cleanedTitle.toLowerCase();
+            const normalizedExpected = expectedTitle.toLowerCase();
             
-            // Exact match with normalization (highest priority)
+            // Exact match
             if (normalizedVideo === normalizedExpected) {
                 bestScore = 1.0;
                 bestMatch = track;
                 return;
             }
             
-            // Check if cleaned title matches track structure
-            const cleanTitle = normalizedVideo
-                .replace(/[^a-z0-9\s]/g, ' ')
-                .replace(/\s+/g, ' ')
+            // Normalize accents and clean
+            const normalizeAccents = (str) => {
+                return str.normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+                    .replace(/[^a-z0-9\s]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            };
+            
+            // Fuzzy match for remixes - remove feat/featuring and remix info
+            const fuzzyCleanVideo = normalizedVideo
+                .replace(/\(feat\.?\s+[^)]+\)/gi, '') // Remove (feat. Artist)
+                .replace(/\(featuring\s+[^)]+\)/gi, '') // Remove (featuring Artist)
+                .replace(/\([^)]*remix[^)]*\)/gi, '') // Remove remix info
+                .replace(/\([^)]*mix[^)]*\)/gi, '') // Remove mix info
                 .trim();
             
-            const cleanExpected = normalizedExpected
-                .replace(/[^a-z0-9\s]/g, ' ')
-                .replace(/\s+/g, ' ')
+            const fuzzyCleanExpected = normalizedExpected
+                .replace(/\([^)]*remix[^)]*\)/gi, '') // Remove remix info
+                .replace(/\([^)]*mix[^)]*\)/gi, '') // Remove mix info
                 .trim();
             
-            // High similarity match with normalization
+            const cleanTitle = normalizeAccents(normalizedVideo);
+            const cleanExpected = normalizeAccents(normalizedExpected);
+            const fuzzyVideoNorm = normalizeAccents(fuzzyCleanVideo);
+            const fuzzyExpectedNorm = normalizeAccents(fuzzyCleanExpected);
+            
             if (cleanTitle === cleanExpected) {
                 bestScore = 0.95;
                 bestMatch = track;
                 return;
             }
             
-            // Check if video contains track title (for cases without artist)
-            const cleanTrack = normalizeRemixMix(track.title.toLowerCase())
+            // Check if video contains track title and artist
+            const cleanTrack = track.title.toLowerCase()
                 .replace(/[^a-z0-9\s]/g, ' ')
                 .replace(/\s+/g, ' ')
                 .trim();
             
+            // Extract artist from expected title for better matching
+            const artistPart = expectedTitle.split(' - ')[0].toLowerCase()
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            
+            // Check if video contains both artist and track title
+            if (cleanTitle.includes(cleanTrack) && cleanTitle.includes(artistPart)) {
+                bestScore = 0.9;
+                bestMatch = track;
+                return;
+            }
+            
+            if (fuzzyVideoNorm === fuzzyExpectedNorm) {
+                bestScore = 0.7;
+                bestMatch = { ...track, isUncertain: true };
+                return;
+            }
+            
+            // For Various Artists, try matching just the track title without artist
+            if (isVariousArtists) {
+                const trackOnlyFuzzy = normalizeAccents(track.title.toLowerCase()
+                    .replace(/\([^)]*remix[^)]*\)/gi, '')
+                    .replace(/\([^)]*mix[^)]*\)/gi, '')
+                    .trim());
+                
+                if (fuzzyVideoNorm === trackOnlyFuzzy) {
+                    bestScore = 0.65;
+                    bestMatch = { ...track, isUncertain: true };
+                    return;
+                }
+            }
+            
+            // Fallback: check if video contains track title
             if (cleanTitle.includes(cleanTrack) || cleanTrack.includes(cleanTitle)) {
                 const score = Math.min(cleanTrack.length, cleanTitle.length) / Math.max(cleanTrack.length, cleanTitle.length) * 0.8;
                 if (score > bestScore) {
                     bestScore = score;
-                    bestMatch = track;
-                }
-            }
-            
-            // Word matching as fallback
-            const trackWords = cleanTrack.split(' ').filter(w => w.length > 2);
-            const titleWords = cleanTitle.split(' ').filter(w => w.length > 2);
-            const matchingWords = trackWords.filter(word => titleWords.includes(word));
-            
-            if (matchingWords.length > 0 && trackWords.length > 0) {
-                const wordScore = matchingWords.length / trackWords.length * 0.6;
-                if (wordScore > bestScore) {
-                    bestScore = wordScore;
                     bestMatch = track;
                 }
             }
@@ -521,8 +558,7 @@ function App() {
         setStatus({ type: 'loading', message: 'Loading test release...' });
         
         try {
-            const releaseDetails = await getReleaseDetails(231953, token || null);
-            console.log('Artists data:', releaseDetails.artists);
+            const releaseDetails = await getReleaseDetails(1726365, token || null);
             const extractedVideos = extractYouTubeVideos(releaseDetails);
             
             setRelease(releaseDetails);
@@ -909,10 +945,13 @@ function App() {
                                                     <div className="video-title">{video.title}</div>
                                                     <div className="track-match">
                                                         {matchedTrack ? (
-                                                            `♪ ${matchedTrack.position} - ${matchedTrack.artists && matchedTrack.artists.length > 0 
-                                                                ? `${matchedTrack.artists.map(a => a.name).join(', ')} - ${matchedTrack.title}`
-                                                                : matchedTrack.title
-                                                            }`
+                                                            <span style={{color: matchedTrack.isUncertain ? '#ff9800' : '#667eea'}}>
+                                                                {matchedTrack.isUncertain ? '❓ ' : '♪ '}
+                                                                {matchedTrack.position} - {matchedTrack.artists && matchedTrack.artists.length > 0 
+                                                                    ? `${matchedTrack.artists.map(a => a.name).join(', ')} - ${matchedTrack.title}`
+                                                                    : matchedTrack.title
+                                                                }
+                                                            </span>
                                                         ) : (
                                                             <span style={{visibility: 'hidden'}}>♪ Placeholder</span>
                                                         )}
