@@ -126,15 +126,38 @@ function App() {
         }
     };
 
-    const fetchDiscogs = async (url, token = null) => {
+    const fetchDiscogs = async (url, token = null, retries = 3) => {
         const headers = { 'User-Agent': 'DiscogsCollectionVideoPlayer/1.0' };
         if (token) headers['Authorization'] = `Discogs token=${token}`;
         
-        const response = await fetch(url, { headers });
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        for (let i = 0; i < retries; i++) {
+            try {
+                const response = await fetch(url, { headers });
+                
+                if (response.status === 429) {
+                    const delay = Math.pow(2, i) * 1000; // Exponential backoff
+                    console.log(`Rate limited, waiting ${delay}ms before retry ${i + 1}/${retries}`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return response.json();
+            } catch (error) {
+                if (error.message.includes('CORS') || error.message.includes('Cross-Origin')) {
+                    throw new Error('CORS error: Please use a token or try from a different browser/network');
+                }
+                
+                if (i === retries - 1) throw error;
+                
+                const delay = Math.pow(2, i) * 1000;
+                console.log(`Request failed, retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
         }
-        return response.json();
     };
 
     const getCollectionInfo = async (username, token) => {
