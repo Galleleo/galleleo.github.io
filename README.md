@@ -44,6 +44,10 @@ A web application that randomly selects releases from your Discogs collection an
 - YouTube iframe API integration with cross-origin support
 - localStorage persistence for all user settings
 - Comprehensive error handling and loading states
+- Advanced track matching with fuzzy logic for remixes and bootlegs
+- Intelligent title normalization (removes filler words, apostrophes, vs/versus variations)
+- Support for Various Artists releases with individual track artist matching
+- Uncertainty indicators for questionable matches (❓ in orange vs ♪ in blue)
 
 ## Security
 

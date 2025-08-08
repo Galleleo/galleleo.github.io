@@ -334,19 +334,38 @@ function App() {
         tracklist.forEach(track => {
             if (!track.title) return;
             
-            // For Various Artists, use track-specific artist if available
+            // For Various Artists, use track-specific artist if available (raw names for matching)
             let expectedTitle;
             if (isVariousArtists && track.artists && track.artists.length > 0) {
-                const trackArtist = track.artists.map(a => a.name).join(', ');
+                const trackArtist = track.artists.map(a => a.name).join(' Vs. ');
                 expectedTitle = `${trackArtist} - ${track.title}`;
+                
+
             } else {
                 const releaseArtist = release.artists ? release.artists.map(a => a.name).join(', ') : '';
                 expectedTitle = `${releaseArtist} - ${track.title}`;
             }
             
-            // Normalize both titles
-            const normalizedVideo = cleanedTitle.toLowerCase();
-            const normalizedExpected = expectedTitle.toLowerCase();
+            // Normalize both titles and handle Vs./slash/versus variations
+            const normalizeForMatching = (str) => {
+                return str.toLowerCase()
+                    .replace(/_/g, ' ')                           // Replace underscores with spaces
+                    .replace(/\s*\/\s*/g, ' ')                    // Remove slashes
+                    .replace(/\s+versus\s+/g, ' ')                // Remove versus
+                    .replace(/\s+vs\.?\s+/g, ' ')                 // Remove vs variations
+                    .replace(/\(official\s+(audio|video)\)/g, '') // Remove (Official Audio/Video)
+                    .replace(/\[official\s+video\]/g, '')         // Remove [Official Video]
+                    .replace(/\((cd|vinyl\s+rip|rip)\)/g, '')     // Remove (CD), (Vinyl RIP), (RIP)
+                    .replace(/\([^)]*\)/g, '')                    // Remove remaining parentheses content
+                    .replace(/\[[^\]]*\]/g, '')                   // Remove square brackets content
+                    .replace(/\b(the|a|an)\s+/g, '')             // Remove filler words
+                    .replace(/'/g, '')                            // Remove apostrophes (trippin' = trippin)
+                    .replace(/\s+/g, ' ')                         // Normalize spaces
+                    .trim();
+            };
+            
+            const normalizedVideo = normalizeForMatching(cleanedTitle);
+            const normalizedExpected = normalizeForMatching(expectedTitle);
             
             // Exact match
             if (normalizedVideo === normalizedExpected) {
@@ -365,17 +384,8 @@ function App() {
             };
             
             // Fuzzy match for remixes - remove feat/featuring and remix info
-            const fuzzyCleanVideo = normalizedVideo
-                .replace(/\(feat\.?\s+[^)]+\)/gi, '') // Remove (feat. Artist)
-                .replace(/\(featuring\s+[^)]+\)/gi, '') // Remove (featuring Artist)
-                .replace(/\([^)]*remix[^)]*\)/gi, '') // Remove remix info
-                .replace(/\([^)]*mix[^)]*\)/gi, '') // Remove mix info
-                .trim();
-            
-            const fuzzyCleanExpected = normalizedExpected
-                .replace(/\([^)]*remix[^)]*\)/gi, '') // Remove remix info
-                .replace(/\([^)]*mix[^)]*\)/gi, '') // Remove mix info
-                .trim();
+            const fuzzyCleanVideo = normalizeForMatching(cleanedTitle);
+            const fuzzyCleanExpected = normalizeForMatching(expectedTitle);
             
             const cleanTitle = normalizeAccents(normalizedVideo);
             const cleanExpected = normalizeAccents(normalizedExpected);
@@ -558,7 +568,7 @@ function App() {
         setStatus({ type: 'loading', message: 'Loading test release...' });
         
         try {
-            const releaseDetails = await getReleaseDetails(1726365, token || null);
+            const releaseDetails = await getReleaseDetails(24100004, token || null);
             const extractedVideos = extractYouTubeVideos(releaseDetails);
             
             setRelease(releaseDetails);
@@ -875,7 +885,7 @@ function App() {
                                                     <span className="track-position">{track.position}</span>
                                                     <span className="track-title">
                                                         {track.artists && track.artists.length > 0 
-                                                            ? `${track.artists.map(a => a.name).join(', ')} - ${track.title}`
+                                                            ? `${formatArtistName(track.artists)} - ${track.title}`
                                                             : track.title
                                                         }
                                                     </span>
@@ -948,7 +958,7 @@ function App() {
                                                             <span style={{color: matchedTrack.isUncertain ? '#ff9800' : '#667eea'}}>
                                                                 {matchedTrack.isUncertain ? '❓ ' : '♪ '}
                                                                 {matchedTrack.position} - {matchedTrack.artists && matchedTrack.artists.length > 0 
-                                                                    ? `${matchedTrack.artists.map(a => a.name).join(', ')} - ${matchedTrack.title}`
+                                                                    ? `${formatArtistName(matchedTrack.artists)} - ${matchedTrack.title}`
                                                                     : matchedTrack.title
                                                                 }
                                                             </span>
@@ -960,7 +970,7 @@ function App() {
                                                 <iframe
                                                     id={`iframe-${video.id}`}
                                                     className="video-iframe"
-                                                    src={`https://www.youtube.com/embed/${video.id}?enablejsapi=1&origin=${window.location.origin}`}
+                                                    src={`https://www.youtube.com/embed/${video.id}?enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                     allowFullScreen
                                                 ></iframe>
