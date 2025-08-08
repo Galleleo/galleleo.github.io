@@ -160,7 +160,9 @@ body {
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     white-space: nowrap;
-    min-width: 55px;
+    min-width: 70px;
+    width: 85px;
+    height: 28px;;
     text-align: center;
 }
 
