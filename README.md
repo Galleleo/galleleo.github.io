@@ -12,6 +12,9 @@ A web application that randomly selects releases from your Discogs collection an
 - Artist name formatting with proper ANV (Artist Name Variation) support
 - Responsive design optimized for laptop screens
 - Persistent user preferences (username, token, playback settings)
+- Smooth crossfade background transitions using release cover art
+- Fixed-size buttons prevent UI jumping during state changes
+- Musical notes favicon (🎵)
 
 ## Setup
 
@@ -34,8 +37,17 @@ A web application that randomly selects releases from your Discogs collection an
 - Automatic release switching with Random Next enabled
 - All preferences saved locally and persist between sessions
 
+## Technical Features
+
+- Blurred, scaled cover art backgrounds with smooth transitions
+- React 18 with createRoot API
+- YouTube iframe API integration with cross-origin support
+- localStorage persistence for all user settings
+- Comprehensive error handling and loading states
+
 ## Security
 
 - No hardcoded API tokens (safe for public hosting)
 - Comprehensive .gitignore with security patterns
 - Pre-commit hooks prevent accidental secret commits
+- Automated git template setup for all new repositories
