@@ -591,6 +591,7 @@ function App() {
     };
 
     return (
+        <>
         <div className="container">
             <div className="header">
                 <div className="header-controls">
@@ -1010,6 +1011,19 @@ function App() {
                 </div>
             )}
         </div>
+        
+        <footer className="footer">
+            <div className="footer-content">
+                <span id="copyright-year">© 2025 Discogs Video Player</span>
+                <span>•</span>
+                <a href="terms.html" className="footer-link">Terms of Service</a>
+                <span>•</span>
+                <a href="privacy.html" className="footer-link">Privacy Policy</a>
+                <span>•</span>
+                <a href="legal.html" className="footer-link">Legal</a>
+            </div>
+        </footer>
+        </>
     );
 }
 
