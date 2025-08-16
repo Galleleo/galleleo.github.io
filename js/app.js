@@ -863,59 +863,69 @@ function App() {
                                 </div>
                             </div>
 
-                            <div className="info-section">
-                                <h3>Collection Info</h3>
-                                <div className="info-item">
-                                    <span className="info-label">Media:</span>
-                                    <select 
-                                        className={`condition-select ${getConditionValue(collectionItem?.notes, 1) === 'Not specified' ? 'not-specified' : ''}`}
-                                        value={getConditionValue(collectionItem?.notes, 1)}
-                                        onChange={(e) => updateCondition(1, e.target.value)}
-                                    >
-                                        {conditionOptions.map(option => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="info-item">
-                                    <span className="info-label">Sleeve:</span>
-                                    <select 
-                                        className={`condition-select ${getConditionValue(collectionItem?.notes, 2) === 'Not specified' ? 'not-specified' : ''}`}
-                                        value={getConditionValue(collectionItem?.notes, 2)}
-                                        onChange={(e) => updateCondition(2, e.target.value)}
-                                    >
-                                        {conditionOptions.map(option => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                {getNotes(collectionItem?.notes) && (
+                            {mode === 'wantlist' ? (
+                                <div className="info-section">
+                                    <h3>Wantlist Info</h3>
                                     <div className="info-item">
-                                        <span className="info-label">Notes:</span>
-                                        <span className="info-value">{getNotes(collectionItem?.notes)}</span>
-                                    </div>
-                                )}
-                                <div className="info-item">
-                                    <span className="info-label">Rating:</span>
-                                    <div className="rating-container">
-                                        <div className="rating-row">
-                                            <div className={`star-rating ${rating === 0 ? 'no-rating' : ''}`}>
-                                                {[1, 2, 3, 4, 5].map(star => (
-                                                    <span
-                                                        key={star}
-                                                        className={`star ${star <= rating ? 'filled' : ''}`}
-                                                        onClick={() => updateRating(star)}
-                                                    >
-                                                        ★
-                                                    </span>
-                                                ))}
-                                            </div>
-                                            <span className="info-value">({rating}/5)</span>
-                                        </div>
-                                        <div className="rating-status">{ratingStatus}</div>
+                                        <span className="info-label">Added:</span>
+                                        <span className="info-value">{collectionItem?.date_added ? new Date(collectionItem.date_added).toLocaleDateString() : 'Unknown'}</span>
                                     </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="info-section">
+                                    <h3>Collection Info</h3>
+                                    <div className="info-item">
+                                        <span className="info-label">Media:</span>
+                                        <select 
+                                            className={`condition-select ${getConditionValue(collectionItem?.notes, 1) === 'Not specified' ? 'not-specified' : ''}`}
+                                            value={getConditionValue(collectionItem?.notes, 1)}
+                                            onChange={(e) => updateCondition(1, e.target.value)}
+                                        >
+                                            {conditionOptions.map(option => (
+                                                <option key={option} value={option}>{option}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="info-item">
+                                        <span className="info-label">Sleeve:</span>
+                                        <select 
+                                            className={`condition-select ${getConditionValue(collectionItem?.notes, 2) === 'Not specified' ? 'not-specified' : ''}`}
+                                            value={getConditionValue(collectionItem?.notes, 2)}
+                                            onChange={(e) => updateCondition(2, e.target.value)}
+                                        >
+                                            {conditionOptions.map(option => (
+                                                <option key={option} value={option}>{option}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    {getNotes(collectionItem?.notes) && (
+                                        <div className="info-item">
+                                            <span className="info-label">Notes:</span>
+                                            <span className="info-value">{getNotes(collectionItem?.notes)}</span>
+                                        </div>
+                                    )}
+                                    <div className="info-item">
+                                        <span className="info-label">Rating:</span>
+                                        <div className="rating-container">
+                                            <div className="rating-row">
+                                                <div className={`star-rating ${rating === 0 ? 'no-rating' : ''}`}>
+                                                    {[1, 2, 3, 4, 5].map(star => (
+                                                        <span
+                                                            key={star}
+                                                            className={`star ${star <= rating ? 'filled' : ''}`}
+                                                            onClick={() => updateRating(star)}
+                                                        >
+                                                            ★
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                                <span className="info-value">({rating}/5)</span>
+                                            </div>
+                                            <div className="rating-status">{ratingStatus}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {release.tracklist && release.tracklist.length > 0 && (
                                 <div className="info-section">
