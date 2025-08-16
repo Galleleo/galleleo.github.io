@@ -71,10 +71,6 @@ body {
 }
 
 .header-cover img {
-    width: 160px;
-    height: 160px;
-    object-fit: cover;
-    border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
@@ -116,4 +112,32 @@ body {
 
 .footer-link:hover {
     color: white;
+}
+
+.header-cover .cover-art {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 160px !important;
+    max-height: 160px !important;
+    object-fit: cover !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+.header-cover .cover-art:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4) !important;
+}
+
+.header-cover .cover-placeholder {
+    width: 160px !important;
+    height: 160px !important;
+    background: #f0f0f0 !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #999 !important;
+    aspect-ratio: 1 !important;
 }

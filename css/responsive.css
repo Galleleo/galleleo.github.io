@@ -6,10 +6,7 @@
         padding: 12px;
         width: 100%;
     }
-    .header-cover img {
-        width: 130px;
-        height: 130px;
-    }
+
     .header-release-title {
         font-size: 1.1rem;
     }

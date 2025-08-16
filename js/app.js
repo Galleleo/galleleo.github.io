@@ -865,7 +865,7 @@ function App() {
                         <img 
                             src={release.images[0].uri} 
                             alt="Release cover"
-                            style={{cursor: 'pointer'}}
+                            className="cover-art"
                             onClick={() => {
                                 setImageModal(release.images);
                                 setCurrentImageIndex(0);
@@ -928,7 +928,7 @@ function App() {
                             }}
                         />
                     ) : (
-                        <div style={{width: '160px', height: '160px', background: '#f0f0f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999'}}>
+                        <div className="cover-placeholder">
                             No Cover
                         </div>
                     )}
