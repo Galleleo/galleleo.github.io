@@ -4,10 +4,11 @@ A web application that randomly selects releases from your Discogs collection an
 
 ## Features
 
-- Random release selection from your Discogs collection
+- Random release selection from your Discogs collection and wantlist
 - YouTube video integration with single-video playback control
 - Automated playback options (Autoplay, Shuffle, Continuous Play, Random Next)
-- Rating system and condition tracking
+- Rating system and condition tracking (collection only)
+- Wantlist support with date added information
 - Drag-and-drop video ordering with persistent storage
 - Artist name formatting with proper ANV (Artist Name Variation) support
 - Responsive design optimized for laptop screens
@@ -16,20 +17,24 @@ A web application that randomly selects releases from your Discogs collection an
 - Fixed-size buttons prevent UI jumping during state changes
 - Musical notes favicon (🎵)
 - Modal overlays for legal pages (Terms, Privacy, Legal) that don't interrupt playback
+- Warning modals for token-required actions with direct links to get API tokens
 
 ## Setup
 
 1. Open [https://galleleo.github.io](https://galleleo.github.io/) in a web browser
 2. Enter your Discogs username
-3. (Optional) Add your Discogs API token from [https://www.discogs.com/settings/developers](https://www.discogs.com/settings/developers) for rating/condition updates
-4. Configure playback options:
+3. (Optional) Add your Discogs API token from [https://www.discogs.com/settings/developers](https://www.discogs.com/settings/developers) for:
+   - Rating and condition updates (collection mode)
+   - Wantlist access (required for wantlist mode)
+4. Choose mode: Collection or Wantlist
+5. Configure playback options:
    - **Autoplay**: Start playing immediately when loading a release
    - **Shuffle**: Play videos in random order
    - **Continuous**: Auto-advance to next video when current ends
    - **Random Next**: Load new random release when playlist ends
-5. Click "Random" to select a release or "Test" for demo content
-6. Rate releases and update media/sleeve conditions
-7. Drag videos to reorder and save custom arrangements
+6. Click "Random" to select a release or "Test" for demo content
+7. Rate releases and update media/sleeve conditions (collection mode)
+8. Drag videos to reorder and save custom arrangements
 
 ## Playback Controls
 

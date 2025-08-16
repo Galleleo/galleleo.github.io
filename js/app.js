@@ -23,6 +23,7 @@ function App() {
     const [playedVideos, setPlayedVideos] = useState(new Set());
     const [mode, setMode] = useState('collection'); // 'collection' or 'wantlist'
     const [modalContent, setModalContent] = useState(null);
+    const [warningModal, setWarningModal] = useState(null);
 
     const handleVideoEnd = useCallback(() => {
         console.log('handleVideoEnd called, currentVideoIndex:', currentVideoIndex, 'videos.length:', videos.length);
@@ -210,6 +211,11 @@ function App() {
     const getRandomReleaseWithVideos = async () => {
         if (!username.trim()) {
             setStatus({ type: 'error', message: 'Please enter a username' });
+            return;
+        }
+        
+        if (mode === 'wantlist' && !token.trim()) {
+            showWarningModal('API token required for wantlist access. Get yours at https://www.discogs.com/settings/developers');
             return;
         }
 
@@ -474,7 +480,7 @@ function App() {
 
     const updateRating = async (newRating) => {
         if (!collectionItem?.instance_id || !token) {
-            setStatus({ type: 'error', message: 'Token required to update rating. Get yours at https://www.discogs.com/settings/developers' });
+            showWarningModal('Token required to update rating. Get yours at https://www.discogs.com/settings/developers');
             return;
         }
 
@@ -504,7 +510,10 @@ function App() {
     };
 
     const updateCondition = async (fieldId, value) => {
-        if (!collectionItem?.instance_id || !token) return;
+        if (!collectionItem?.instance_id || !token) {
+            showWarningModal('Token required to update conditions. Get yours at https://www.discogs.com/settings/developers');
+            return;
+        }
         
         try {
             const url = `https://api.discogs.com/users/${username}/collection/folders/0/releases/${collectionItem.id}/instances/${collectionItem.instance_id}`;
@@ -581,6 +590,14 @@ function App() {
 
     const closeModal = () => {
         setModalContent(null);
+    };
+
+    const showWarningModal = (message) => {
+        setWarningModal(message);
+    };
+
+    const closeWarningModal = () => {
+        setWarningModal(null);
     };
 
     const loadTestRelease = async () => {
@@ -666,6 +683,11 @@ function App() {
                                 style={{width: '110px', padding: '4px 6px', border: '1px solid #e1e5e9', borderRadius: '4px', fontSize: '10px'}}
                             />
                         </div>
+                        {mode === 'wantlist' && !token.trim() && (
+                            <div style={{fontSize: '0.7rem', color: '#e74c3c', textAlign: 'center', marginTop: '4px'}}>
+                                ⚠️ Token required for wantlist - <a href="https://www.discogs.com/settings/developers" target="_blank" rel="noopener noreferrer" style={{color: '#e74c3c', textDecoration: 'underline'}}>Get token</a>
+                            </div>
+                        )}
                         {DEBUG_MODE && (
                             <div className="button-row">
                                 <button 
@@ -1057,6 +1079,23 @@ function App() {
                         <button className="modal-close" onClick={closeModal}>×</button>
                     </div>
                     <div className="modal-body" dangerouslySetInnerHTML={{__html: modalContent.content}}>
+                    </div>
+                </div>
+            </div>
+        )}
+        
+        {warningModal && (
+            <div className="modal-overlay" onClick={closeWarningModal}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '500px'}}>
+                    <div className="modal-header">
+                        <h1 className="modal-title">⚠️ Token Required</h1>
+                        <button className="modal-close" onClick={closeWarningModal}>×</button>
+                    </div>
+                    <div className="modal-body">
+                        <p dangerouslySetInnerHTML={{__html: warningModal.replace('https://www.discogs.com/settings/developers', '<a href="https://www.discogs.com/settings/developers" target="_blank" rel="noopener noreferrer">https://www.discogs.com/settings/developers</a>')}}></p>
+                        <div style={{textAlign: 'center', marginTop: '20px'}}>
+                            <button className="btn" onClick={closeWarningModal}>OK</button>
+                        </div>
                     </div>
                 </div>
             </div>
