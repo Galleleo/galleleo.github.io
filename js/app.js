@@ -847,7 +847,7 @@ function App() {
                                 {release.title || 'Unknown Title'}
                             </span>
                             <div style={{fontSize: '0.9rem', color: '#888', marginTop: '4px'}}>
-                                {release.year || 'Unknown Year'} • {release.labels ? release.labels.map(l => l.name).join(', ') : 'Unknown Label'}
+                                {release.year || 'Unknown Year'} • {release.labels ? release.labels.map(l => `${l.name}${l.catno ? ` (${l.catno})` : ''}`).join(', ') : 'Unknown Label'}
                             </div>
                         </div>
                     ) : (
