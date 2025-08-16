@@ -8,6 +8,30 @@
     display: flex;
     gap: 6px;
     align-items: flex-end;
+    width: 100%;
+}
+
+.user-row .input-group {
+    flex: 1;
+}
+
+.user-row .btn {
+    flex: 1;
+    max-width: 120px;
+}
+
+.mode-row {
+    width: 100%;
+}
+
+.mode-row .button-group {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+}
+
+.mode-row .toggle-btn {
+    flex: 1;
 }
 
 .token-row {

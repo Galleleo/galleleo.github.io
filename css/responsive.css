@@ -1,6 +1,6 @@
 @media (max-width: 1600px) {
     .header {
-        grid-template-columns: 160px 1fr 160px;
+        grid-template-columns: 25% 1fr 25%;
         gap: 12px;
         min-height: 80px;
         padding: 12px;

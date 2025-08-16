@@ -27,6 +27,7 @@ function App() {
     const [marketplaceData, setMarketplaceData] = useState(null);
     const [imageModal, setImageModal] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [currentReleaseMode, setCurrentReleaseMode] = useState(null);
 
     const handleVideoEnd = useCallback(() => {
         console.log('handleVideoEnd called, currentVideoIndex:', currentVideoIndex, 'videos.length:', videos.length);
@@ -291,6 +292,7 @@ function App() {
                     setRating(randomRelease.rating || 0);
                     setCurrentVideoIndex(0);
                     setPlayedVideos(new Set());
+                    setCurrentReleaseMode(isWantlist ? 'wantlist' : 'collection');
                     
                     // Fetch marketplace data for wantlist items
                     if (isWantlist && token) {
@@ -970,7 +972,7 @@ function App() {
                                 </div>
                             </div>
 
-                            {mode === 'wantlist' ? (
+                            {currentReleaseMode === 'wantlist' ? (
                                 <div className="info-section">
                                     <h3>Wantlist Info</h3>
                                     <div className="info-item">
@@ -1147,7 +1149,7 @@ function App() {
                                                 <iframe
                                                     id={`iframe-${video.id}`}
                                                     className="video-iframe"
-                                                    src={`https://www.youtube.com/embed/${video.id}?enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
+                                                    src={`https://www.youtube.com/embed/${video.id}?enablejsapi=1&origin=${encodeURIComponent(window.location.protocol + '//' + window.location.host)}`}
                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                     allowFullScreen
                                                 ></iframe>

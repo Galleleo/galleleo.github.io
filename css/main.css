@@ -26,7 +26,7 @@ body {
     backdrop-filter: blur(10px);
     margin-bottom: 20px;
     display: grid;
-    grid-template-columns: 180px 1fr 180px;
+    grid-template-columns: 25% 1fr 25%;
     gap: 15px;
     align-items: center;
     min-height: 90px;
@@ -66,7 +66,7 @@ body {
 
 .header-cover {
     display: flex;
-    justify-content: center;
+    justify-content: right;
     align-items: center;
 }
 
