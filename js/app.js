@@ -25,6 +25,8 @@ function App() {
     const [modalContent, setModalContent] = useState(null);
     const [warningModal, setWarningModal] = useState(null);
     const [marketplaceData, setMarketplaceData] = useState(null);
+    const [imageModal, setImageModal] = useState(null);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     const handleVideoEnd = useCallback(() => {
         console.log('handleVideoEnd called, currentVideoIndex:', currentVideoIndex, 'videos.length:', videos.length);
@@ -87,6 +89,19 @@ function App() {
             initializePlayers();
         }
     }, [videos]);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                if (imageModal) setImageModal(null);
+                if (modalContent) setModalContent(null);
+                if (warningModal) setWarningModal(null);
+            }
+        };
+        
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [imageModal, modalContent, warningModal]);
 
     const initializePlayers = () => {
         const newPlayers = [];
@@ -850,6 +865,11 @@ function App() {
                         <img 
                             src={release.images[0].uri} 
                             alt="Release cover"
+                            style={{cursor: 'pointer'}}
+                            onClick={() => {
+                                setImageModal(release.images);
+                                setCurrentImageIndex(0);
+                            }}
                             onLoad={() => {
                                 // Create new background element
                                 const newBgElement = document.createElement('div');
@@ -1186,6 +1206,33 @@ function App() {
                             <button className="btn" onClick={closeWarningModal}>OK</button>
                         </div>
                     </div>
+                </div>
+            </div>
+        )}
+        
+        {imageModal && (
+            <div className="modal-overlay" onClick={() => setImageModal(null)}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{width: '40%', maxHeight: '90vh', padding: '0', position: 'relative'}}>
+                    <div className="modal-header" style={{padding: '15px'}}>
+                        <button className="modal-close" onClick={() => setImageModal(null)}>×</button>
+                    </div>
+                    <img src={imageModal[currentImageIndex].uri} alt="Release cover" style={{width: '100%', height: 'auto', display: 'block'}} />
+                    {imageModal.length > 1 && (
+                        <>
+                            <button 
+                                onClick={() => setCurrentImageIndex(prev => prev > 0 ? prev - 1 : imageModal.length - 1)}
+                                style={{position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer', fontSize: '18px'}}
+                            >
+                                ←
+                            </button>
+                            <button 
+                                onClick={() => setCurrentImageIndex(prev => prev < imageModal.length - 1 ? prev + 1 : 0)}
+                                style={{position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', padding: '10px', borderRadius: '50%', cursor: 'pointer', fontSize: '18px'}}
+                            >
+                                →
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         )}
