@@ -15,6 +15,7 @@ A web application that randomly selects releases from your Discogs collection an
 - Smooth crossfade background transitions using release cover art
 - Fixed-size buttons prevent UI jumping during state changes
 - Musical notes favicon (🎵)
+- Modal overlays for legal pages (Terms, Privacy, Legal) that don't interrupt playback
 
 ## Setup
 
@@ -48,6 +49,29 @@ A web application that randomly selects releases from your Discogs collection an
 - Intelligent title normalization (removes filler words, apostrophes, vs/versus variations)
 - Support for Various Artists releases with individual track artist matching
 - Uncertainty indicators for questionable matches (❓ in orange vs ♪ in blue)
+- Modular CSS architecture with organized file structure
+- Separate legal content files for easy maintenance
+
+## Project Structure
+
+```bash
+├── css/
+│   ├── main.css        # Core styles (body, header, footer)
+│   ├── controls.css    # Buttons, inputs, checkboxes
+│   ├── release.css     # Release cards, info sections
+│   ├── videos.css      # Video grid, player styles
+│   ├── modal.css       # Modal overlay styles
+│   └── responsive.css  # Media queries
+├── js/
+│   ├── app.js          # Main React application
+│   ├── test_videos.js  # Test video data
+│   └── legal-config.js # Legal configuration
+├── legal/
+│   ├── terms.js        # Terms of Service content
+│   ├── privacy.js      # Privacy Policy content
+│   └── legal.js        # Legal Information content
+└── index.html          # Main HTML file
+```
 
 ## Security
 
@@ -55,3 +79,7 @@ A web application that randomly selects releases from your Discogs collection an
 - Comprehensive .gitignore with security patterns
 - Pre-commit hooks prevent accidental secret commits
 - Automated git template setup for all new repositories
+
+## Author
+
+Created by Alexander Gallwitz - [github.com/galleleo](https://github.com/galleleo)

@@ -1,28 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Legal Information - Discogs Video Player</title>
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css">
-    <script src="legal-config.js"></script>
-    <style>
-        .legal-page { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
-        .legal-content { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .legal-content h1 { color: #667eea; margin-bottom: 30px; }
-        .legal-content h2 { color: #667eea; margin: 30px 0 15px 0; }
-        .legal-content p { margin-bottom: 15px; line-height: 1.6; }
-        .back-link { display: inline-block; margin-bottom: 20px; color: white; text-decoration: none; }
-        .back-link:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="legal-page">
-        <a href="/" class="back-link">← Back to Discogs Video Player</a>
-        <div class="legal-content">
-            <h1>Legal Information</h1>
-            
+const legalContent = {
+    title: 'Legal Information',
+    content: (
+        <>
             <h2>1. Project Status</h2>
             <p>Discogs Video Player is a non-profit, open-source hobby project created for educational and personal use purposes. It is not a commercial service and generates no revenue.</p>
             
@@ -48,10 +27,9 @@
             <p>The source code of this project may be made available under an open-source license. All third-party trademarks, logos, and content remain the property of their respective owners.</p>
             
             <h2>7. Contact and Takedown Requests</h2>
-            <p>If you believe this service infringes on your rights or have concerns about its operation, please contact the project maintainer through the appropriate channels.</p>
+            <p>If you believe this service infringes on your rights or have concerns about its operation, please contact Alexander Gallwitz at <a href="https://www.github.com/galleleo" target="_blank" rel="noopener noreferrer">github.com/galleleo</a>.</p>
             
-            <p><em id="last-updated"></em></p>
-        </div>
-    </div>
-</body>
-</html>
+            <p><em>Last updated: August 16, 2025</em></p>
+        </>
+    )
+};

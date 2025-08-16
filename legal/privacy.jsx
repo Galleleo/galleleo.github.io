@@ -1,28 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - Discogs Video Player</title>
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css">
-    <script src="legal-config.js"></script>
-    <style>
-        .legal-page { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
-        .legal-content { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .legal-content h1 { color: #667eea; margin-bottom: 30px; }
-        .legal-content h2 { color: #667eea; margin: 30px 0 15px 0; }
-        .legal-content p { margin-bottom: 15px; line-height: 1.6; }
-        .back-link { display: inline-block; margin-bottom: 20px; color: white; text-decoration: none; }
-        .back-link:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="legal-page">
-        <a href="/" class="back-link">← Back to Discogs Video Player</a>
-        <div class="legal-content">
-            <h1>Privacy Policy</h1>
-            
+const privacyContent = {
+    title: 'Privacy Policy',
+    content: (
+        <>
             <h2>1. Information We Collect</h2>
             <p>We do not collect, store, or process any personal information on our servers. All data is stored locally in your browser using localStorage.</p>
             
@@ -55,8 +34,7 @@
             <h2>7. Changes to This Policy</h2>
             <p>As this is a hobby project, this privacy policy may be updated occasionally. Check this page for any changes.</p>
             
-            <p><em id="last-updated"></em></p>
-        </div>
-    </div>
-</body>
-</html>
+            <p><em>Last updated: August 16, 2025</em></p>
+        </>
+    )
+};
