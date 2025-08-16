@@ -1078,7 +1078,8 @@ function App() {
                         <h1 className="modal-title">{modalContent.title}</h1>
                         <button className="modal-close" onClick={closeModal}>×</button>
                     </div>
-                    <div className="modal-body" dangerouslySetInnerHTML={{__html: modalContent.content}}>
+                    <div className="modal-body">
+                        {modalContent.content}
                     </div>
                 </div>
             </div>
