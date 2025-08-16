@@ -665,7 +665,7 @@ function App() {
                     <p>The source code of this project may be made available under an open-source license. All third-party trademarks, logos, and content remain the property of their respective owners.</p>
                     
                     <h2>7. Contact and Takedown Requests</h2>
-                    <p>If you believe this service infringes on your rights or have concerns about its operation, please contact the project maintainer through the appropriate channels.</p>
+                    <p>If you believe this service infringes on your rights or have concerns about its operation, please contact Alexander Gallwitz at <a href="https://www.github.com/galleleo" target="_blank" rel="noopener noreferrer">github.com/galleleo</a>.</p>
                     
                     <p><em>Last updated: August 16, 2025</em></p>
                 </>
