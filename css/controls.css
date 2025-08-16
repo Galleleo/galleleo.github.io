@@ -110,8 +110,7 @@
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
-    min-width: 70px;
-    width: 85px;
+    min-width: 100px;
     height: 28px;
     text-align: center;
 }
