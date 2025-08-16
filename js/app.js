@@ -1093,7 +1093,12 @@ function App() {
                         <button className="modal-close" onClick={closeWarningModal}>×</button>
                     </div>
                     <div className="modal-body">
-                        <p dangerouslySetInnerHTML={{__html: warningModal.replace('https://www.discogs.com/settings/developers', '<a href="https://www.discogs.com/settings/developers" target="_blank" rel="noopener noreferrer">https://www.discogs.com/settings/developers</a>')}}></p>
+                        <p>
+                            {warningModal.replace(' Get yours at https://www.discogs.com/settings/developers', '')} Get yours at{' '}
+                            <a href="https://www.discogs.com/settings/developers" target="_blank" rel="noopener noreferrer">
+                                https://www.discogs.com/settings/developers
+                            </a>
+                        </p>
                         <div style={{textAlign: 'center', marginTop: '20px'}}>
                             <button className="btn" onClick={closeWarningModal}>OK</button>
                         </div>
