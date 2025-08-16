@@ -21,7 +21,7 @@ function App() {
     const [randomNext, setRandomNext] = useState(localStorage.getItem('randomNext') === 'true');
     const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
     const [playedVideos, setPlayedVideos] = useState(new Set());
-    const [mode, setMode] = useState('collection'); // 'collection' or 'wantlist'
+    const [mode, setMode] = useState(localStorage.getItem('discogs-collection-type') || 'collection'); // 'collection' or 'wantlist'
     const [modalContent, setModalContent] = useState(null);
     const [warningModal, setWarningModal] = useState(null);
     const [marketplaceData, setMarketplaceData] = useState(null);
@@ -191,7 +191,6 @@ function App() {
     const getMarketplaceData = async (releaseId, token) => {
         try {
             const stats = await fetchDiscogs(`https://api.discogs.com/marketplace/stats/${releaseId}`, token);
-            console.log('Full marketplace stats response:', JSON.stringify(stats, null, 2));
             return {
                 forSale: stats.num_for_sale || 0,
                 lowestPrice: stats.lowest_price,
@@ -280,9 +279,7 @@ function App() {
                     
                     // Fetch marketplace data for wantlist items
                     if (isWantlist && token) {
-                        console.log('Fetching marketplace data for release:', releaseDetails.id);
                         const marketplace = await getMarketplaceData(releaseDetails.id, token);
-                        console.log('Marketplace data received:', marketplace);
                         setMarketplaceData(marketplace);
                     } else {
                         setMarketplaceData(null);
@@ -694,14 +691,14 @@ function App() {
                         <div className="button-group" style={{display: 'flex', gap: '8px'}}>
                             <button 
                                 className={`toggle-btn ${mode === 'collection' ? 'active' : ''}`}
-                                onClick={() => {setMode('collection'); localStorage.setItem('mode', 'collection'); setCollectionCache(null);}}
+                                onClick={() => {setMode('collection'); localStorage.setItem('discogs-collection-type', 'collection'); setCollectionCache(null);}}
                                 disabled={loading}
                             >
                                 📚 Collection
                             </button>
                             <button 
                                 className={`toggle-btn ${mode === 'wantlist' ? 'active' : ''}`}
-                                onClick={() => {setMode('wantlist'); localStorage.setItem('mode', 'wantlist'); setCollectionCache(null);}}
+                                onClick={() => {setMode('wantlist'); localStorage.setItem('discogs-collection-type', 'wantlist'); setCollectionCache(null);}}
                                 disabled={loading}
                             >
                                 ❤️ Wantlist
@@ -819,6 +816,11 @@ function App() {
                             No release selected
                         </div>
                     )}
+                    {status.message && (
+                        <div className={`status ${status.type}`} style={{textAlign: 'center', marginTop: '10px', color: '#333'}}>
+                            {status.message}
+                        </div>
+                    )}
                 </div>
                 
                 <div className="header-cover">
@@ -890,12 +892,6 @@ function App() {
                     )}
                 </div>
             </div>
-
-            {status.message && (
-                <div className={`status ${status.type}`} style={{textAlign: 'center', marginBottom: '20px'}}>
-                    {status.message}
-                </div>
-            )}
 
             {release && (
                 <div className="release-card">
