@@ -352,7 +352,29 @@ function App() {
 
     const getUniqueFormats = (formats) => {
         if (!formats) return 'Unknown';
-        const uniqueFormats = [...new Set(formats.map(f => f.name))];
+        const formatInfo = [];
+        
+        formats.forEach(format => {
+            let formatStr = format.name;
+            
+            // Add vinyl size information
+            if (format.descriptions) {
+                const size = format.descriptions.find(desc => desc === '12"' || desc === '7"');
+                if (size) {
+                    formatStr += ` (${size})`;
+                }
+                
+                // Check for white label
+                const whiteLabel = format.descriptions.find(desc => desc.toLowerCase().includes('white label'));
+                if (whiteLabel) {
+                    formatStr += ' - White Label';
+                }
+            }
+            
+            formatInfo.push(formatStr);
+        });
+        
+        const uniqueFormats = [...new Set(formatInfo)];
         return uniqueFormats.join(', ');
     };
 
