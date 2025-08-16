@@ -8,7 +8,7 @@ A web application that randomly selects releases from your Discogs collection an
 - YouTube video integration with single-video playback control
 - Automated playback options (Autoplay, Shuffle, Continuous Play, Random Next)
 - Rating system and condition tracking (collection only)
-- Wantlist support with date added information
+- Wantlist support with date added information and marketplace pricing (lowest price only due to API limitations)
 - Drag-and-drop video ordering with persistent storage
 - Artist name formatting with proper ANV (Artist Name Variation) support
 - Responsive design optimized for laptop screens

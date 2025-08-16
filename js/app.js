@@ -24,6 +24,7 @@ function App() {
     const [mode, setMode] = useState('collection'); // 'collection' or 'wantlist'
     const [modalContent, setModalContent] = useState(null);
     const [warningModal, setWarningModal] = useState(null);
+    const [marketplaceData, setMarketplaceData] = useState(null);
 
     const handleVideoEnd = useCallback(() => {
         console.log('handleVideoEnd called, currentVideoIndex:', currentVideoIndex, 'videos.length:', videos.length);
@@ -187,6 +188,23 @@ function App() {
         return fetchDiscogs(url, token);
     };
 
+    const getMarketplaceData = async (releaseId, token) => {
+        try {
+            const stats = await fetchDiscogs(`https://api.discogs.com/marketplace/stats/${releaseId}`, token);
+            console.log('Full marketplace stats response:', JSON.stringify(stats, null, 2));
+            return {
+                forSale: stats.num_for_sale || 0,
+                lowestPrice: stats.lowest_price,
+                medianPrice: stats.median_price,
+                highestPrice: stats.highest_price,
+                blocked: stats.blocked_from_sale
+            };
+        } catch (error) {
+            console.error('Error fetching marketplace data:', error);
+            return { forSale: 0, lowestPrice: null, medianPrice: null, highestPrice: null, blocked: false };
+        }
+    };
+
     const extractYouTubeVideos = (release) => {
         const videos = [];
         const seenIds = new Set();
@@ -259,6 +277,17 @@ function App() {
                     setRating(randomRelease.rating || 0);
                     setCurrentVideoIndex(0);
                     setPlayedVideos(new Set());
+                    
+                    // Fetch marketplace data for wantlist items
+                    if (isWantlist && token) {
+                        console.log('Fetching marketplace data for release:', releaseDetails.id);
+                        const marketplace = await getMarketplaceData(releaseDetails.id, token);
+                        console.log('Marketplace data received:', marketplace);
+                        setMarketplaceData(marketplace);
+                    } else {
+                        setMarketplaceData(null);
+                    }
+                    
                     setStatus({ type: '', message: '' });
                     setLoading(false);
                     
@@ -600,6 +629,16 @@ function App() {
         setWarningModal(null);
     };
 
+    const testMarketplaceAPI = async () => {
+        console.log('Testing marketplace search API for release 183002...');
+        try {
+            const search = await fetchDiscogs('https://api.discogs.com/marketplace/search?release_id=183002', token || null);
+            console.log('Marketplace search response:', JSON.stringify(search, null, 2));
+        } catch (error) {
+            console.error('API test failed:', error);
+        }
+    };
+
     const loadTestRelease = async () => {
         setLoading(true);
         setRelease(null);
@@ -697,6 +736,14 @@ function App() {
                                     style={{background: '#e67e22'}}
                                 >
                                     🧪 Test
+                                </button>
+                                <button 
+                                    className="btn" 
+                                    onClick={testMarketplaceAPI}
+                                    disabled={loading}
+                                    style={{background: '#3498db', marginLeft: '5px'}}
+                                >
+                                    📊 API Test
                                 </button>
                             </div>
                         )}
@@ -891,6 +938,24 @@ function App() {
                                     <div className="info-item">
                                         <span className="info-label">Added:</span>
                                         <span className="info-value">{collectionItem?.date_added ? new Date(collectionItem.date_added).toLocaleDateString() : 'Unknown'}</span>
+                                    </div>
+                                    <div className="info-item">
+                                        <span className="info-label">For Sale:</span>
+                                        <span className="info-value">
+                                            {marketplaceData !== null ? (
+                                                marketplaceData.blocked ? 'Blocked from sale' :
+                                                marketplaceData.forSale > 0 ? (
+                                                    <>
+                                                        <a href={`https://www.discogs.com/sell/release/${release.id}`} target="_blank" rel="noopener noreferrer" className="discogs-link">
+                                                            {marketplaceData.forSale} copies
+                                                        </a>
+                                                        {marketplaceData.lowestPrice && (
+                                                            <> from {marketplaceData.lowestPrice.value.toFixed(2)} ({marketplaceData.lowestPrice.currency})</>
+                                                        )}
+                                                    </>
+                                                ) : 'Not currently for sale'
+                                            ) : 'Loading...'}
+                                        </span>
                                     </div>
                                 </div>
                             ) : (
