@@ -1,5 +1,7 @@
 const { useState, useEffect, useCallback, useRef } = React;
 
+const DEBUG_MODE = false; // Set to true to show test button
+
 function App() {
     const [username, setUsername] = useState(localStorage.getItem('discogs-username') || 'Galleleo');
     const [token, setToken] = useState(localStorage.getItem('discogs-token') || '');
@@ -19,6 +21,7 @@ function App() {
     const [randomNext, setRandomNext] = useState(localStorage.getItem('randomNext') === 'true');
     const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
     const [playedVideos, setPlayedVideos] = useState(new Set());
+    const [mode, setMode] = useState('collection'); // 'collection' or 'wantlist'
 
     const handleVideoEnd = useCallback(() => {
         console.log('handleVideoEnd called, currentVideoIndex:', currentVideoIndex, 'videos.length:', videos.length);
@@ -158,20 +161,23 @@ function App() {
         }
     };
 
-    const getCollectionInfo = async (username, token) => {
-        const url = `https://api.discogs.com/users/${username}/collection/folders/0/releases?per_page=100`;
+    const getCollectionInfo = async (username, token, isWantlist = false) => {
+        const url = isWantlist 
+            ? `https://api.discogs.com/users/${username}/wants?per_page=100`
+            : `https://api.discogs.com/users/${username}/collection/folders/0/releases?per_page=100`;
         const data = await fetchDiscogs(url, token);
         return {
             totalItems: data.pagination.items,
             totalPages: data.pagination.pages
         };
     };
-
-    const getRandomPage = async (username, token, totalPages) => {
+    const getRandomPage = async (username, token, totalPages, isWantlist = false) => {
         const randomPage = Math.floor(Math.random() * totalPages) + 1;
-        const url = `https://api.discogs.com/users/${username}/collection/folders/0/releases?per_page=100&page=${randomPage}`;
+        const url = isWantlist 
+            ? `https://api.discogs.com/users/${username}/wants?per_page=100&page=${randomPage}`
+            : `https://api.discogs.com/users/${username}/collection/folders/0/releases?per_page=100&page=${randomPage}`;
         const data = await fetchDiscogs(url, token);
-        return data.releases;
+        return isWantlist ? data.wants : data.releases;
     };
 
     const getReleaseDetails = async (releaseId, token) => {
@@ -212,14 +218,15 @@ function App() {
         document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
 
         try {
+            const isWantlist = mode === 'wantlist';
             let cache = collectionCache;
             if (!cache) {
-                setStatus({ type: 'loading', message: 'Loading collection info...' });
-                cache = await getCollectionInfo(username, token || null);
+                setStatus({ type: 'loading', message: `Loading ${mode} info...` });
+                cache = await getCollectionInfo(username, token || null, isWantlist);
                 setCollectionCache(cache);
                 
                 if (cache.totalItems === 0) {
-                    setStatus({ type: 'error', message: 'No releases found in collection' });
+                    setStatus({ type: 'error', message: `No releases found in ${mode}` });
                     setLoading(false);
                     return;
                 }
@@ -231,11 +238,11 @@ function App() {
             const maxAttempts = 10;
 
             while (attempts < maxAttempts) {
-                const randomPage = await getRandomPage(username, token || null, cache.totalPages);
+                const randomPage = await getRandomPage(username, token || null, cache.totalPages, isWantlist);
                 const randomIndex = Math.floor(Math.random() * randomPage.length);
                 const randomRelease = randomPage[randomIndex];
 
-                const releaseDetails = await getReleaseDetails(randomRelease.id, token || null);
+                const releaseDetails = await getReleaseDetails(randomRelease.id || randomRelease.basic_information?.id, token || null);
                 const extractedVideos = extractYouTubeVideos(releaseDetails);
 
                 if (extractedVideos.length > 0) {
@@ -587,7 +594,7 @@ function App() {
         <div className="container">
             <div className="header">
                 <div className="header-controls">
-                    <h1>🎵 Discogs Video Player</h1>
+                    <h1 style={{whiteSpace: 'nowrap'}}>🎵 Discogs Video Player</h1>
                     <div className="controls">
                         <div className="user-row">
                             <div className="input-group">
@@ -603,39 +610,58 @@ function App() {
                                     placeholder="Username"
                                 />
                             </div>
+                        <button 
+                            className="btn" 
+                            onClick={getRandomReleaseWithVideos}
+                            disabled={loading}
+                        >
+                            {loading ? '🔄 Searching...' : '🎲 Random'}
+                        </button>
+                    </div>
+                    <div className="mode-row">
+                        <div className="button-group" style={{display: 'flex', gap: '8px'}}>
+                            <button 
+                                className={`toggle-btn ${mode === 'collection' ? 'active' : ''}`}
+                                onClick={() => {setMode('collection'); localStorage.setItem('mode', 'collection'); setCollectionCache(null);}}
+                                disabled={loading}
+                            >
+                                📚 Collection
+                            </button>
+                            <button 
+                                className={`toggle-btn ${mode === 'wantlist' ? 'active' : ''}`}
+                                onClick={() => {setMode('wantlist'); localStorage.setItem('mode', 'wantlist'); setCollectionCache(null);}}
+                                disabled={loading}
+                            >
+                                ❤️ Wantlist
+                            </button>
                         </div>
-                        <div className="token-row">
-                            <div className="input-group">
-                                <label htmlFor="token">API Token:</label>
-                                <input
-                                    type="text"
-                                    id="token"
-                                    value={token}
-                                    onChange={(e) => {
-                                        setToken(e.target.value);
-                                        localStorage.setItem('discogs-token', e.target.value);
-                                    }}
-                                    placeholder="Token"
-                                />
+                        </div>
+                        <div className="token-row" style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+                            <label htmlFor="token" style={{fontSize: '0.75rem', fontWeight: '600', color: '#555', whiteSpace: 'nowrap'}}>API Token:</label>
+                            <input
+                                type="text"
+                                id="token"
+                                value={token}
+                                onChange={(e) => {
+                                    setToken(e.target.value);
+                                    localStorage.setItem('discogs-token', e.target.value);
+                                }}
+                                placeholder="Token"
+                                style={{width: '110px', padding: '4px 6px', border: '1px solid #e1e5e9', borderRadius: '4px', fontSize: '10px'}}
+                            />
+                        </div>
+                        {DEBUG_MODE && (
+                            <div className="button-row">
+                                <button 
+                                    className="btn" 
+                                    onClick={loadTestRelease}
+                                    disabled={loading}
+                                    style={{background: '#e67e22'}}
+                                >
+                                    🧪 Test
+                                </button>
                             </div>
-                        </div>
-                        <div className="button-row">
-                            <button 
-                                className="btn" 
-                                onClick={getRandomReleaseWithVideos}
-                                disabled={loading}
-                            >
-                                {loading ? '🔄' : '🎲 Random'}
-                            </button>
-                            <button 
-                                className="btn test-button" 
-                                onClick={loadTestRelease}
-                                disabled={loading}
-                                style={{background: '#e67e22'}}
-                            >
-                                🧪 Test
-                            </button>
-                        </div>
+                        )}
                         <div className="options-row">
                             <div className="checkbox-group">
                                 <input 

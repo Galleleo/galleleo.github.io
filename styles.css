@@ -30,6 +30,7 @@ body {
     gap: 15px;
     align-items: center;
     min-height: 90px;
+    width: 100%;
 }
 
 .header-controls {
@@ -164,8 +165,7 @@ body {
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     white-space: nowrap;
-    min-width: 70px;
-    width: 85px;
+    min-width: 100px;
     height: 28px;;
     text-align: center;
 }
@@ -176,6 +176,40 @@ body {
 }
 
 .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.toggle-btn {
+    background: #e0e0e0;
+    color: #666;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    min-width: 70px;
+    width: 85px;
+    height: 28px;
+    text-align: center;
+}
+
+.toggle-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.toggle-btn:hover:not(.active) {
+    background: #d0d0d0;
+}
+
+.toggle-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
@@ -305,8 +339,8 @@ body {
 }
 
 .style-tag {
-    background: #667eea;
-    color: white;
+    background: #e8ecf7;
+    color: #667eea;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 0.85rem;
@@ -478,18 +512,19 @@ body {
 }
 
 .discogs-link {
-    background: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     text-decoration: none;
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 0.85rem;
     display: inline-block;
-    transition: background 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .discogs-link:hover {
-    background: #5a6fd8;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
 @media (max-width: 1600px) {
@@ -498,6 +533,7 @@ body {
         gap: 12px;
         min-height: 80px;
         padding: 12px;
+        width: 100%;
     }
     .header-cover img {
         width: 130px;
