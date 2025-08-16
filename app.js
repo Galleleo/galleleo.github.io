@@ -22,6 +22,7 @@ function App() {
     const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
     const [playedVideos, setPlayedVideos] = useState(new Set());
     const [mode, setMode] = useState('collection'); // 'collection' or 'wantlist'
+    const [modalContent, setModalContent] = useState(null);
 
     const handleVideoEnd = useCallback(() => {
         console.log('handleVideoEnd called, currentVideoIndex:', currentVideoIndex, 'videos.length:', videos.length);
@@ -568,6 +569,118 @@ function App() {
         }).join(' ').trim();
     };
 
+    const modalData = {
+        terms: {
+            title: 'Terms of Service',
+            content: (
+                <>
+                    <h2>1. About This Service</h2>
+                    <p>Discogs Video Player is a non-profit hobby project that allows users to view YouTube videos associated with releases in their Discogs collection. This service is provided free of charge and is not affiliated with Discogs or YouTube.</p>
+                    
+                    <h2>2. Use of the Service</h2>
+                    <p>This service is provided "as is" for personal, non-commercial use only. You may use your own Discogs username and API token to access your collection data.</p>
+                    
+                    <h2>3. Data and Privacy</h2>
+                    <p>We do not store your personal data on our servers. Your Discogs username and API token are stored locally in your browser. We are not responsible for any data accessed through the Discogs API.</p>
+                    
+                    <h2>4. Third-Party Services</h2>
+                    <p>This service integrates with Discogs API and YouTube. Use of these services is subject to their respective terms of service and privacy policies.</p>
+                    
+                    <h2>5. Limitations</h2>
+                    <p>This is a hobby project with no guarantees of availability, accuracy, or functionality. The service may be discontinued at any time without notice.</p>
+                    
+                    <h2>6. Contact</h2>
+                    <p>This is a personal project. For issues or questions, please refer to the project's GitHub repository.</p>
+                    
+                    <p><em>Last updated: August 16, 2025</em></p>
+                </>
+            )
+        },
+        privacy: {
+            title: 'Privacy Policy',
+            content: (
+                <>
+                    <h2>1. Information We Collect</h2>
+                    <p>We do not collect, store, or process any personal information on our servers. All data is stored locally in your browser using localStorage.</p>
+                    
+                    <h2>2. Local Storage</h2>
+                    <p>The following information is stored locally in your browser:</p>
+                    <ul>
+                        <li>Your Discogs username</li>
+                        <li>Your Discogs API token (if provided)</li>
+                        <li>Your playback preferences (autoplay, shuffle, etc.)</li>
+                        <li>Video ordering preferences for releases</li>
+                    </ul>
+                    
+                    <h2>3. Third-Party APIs</h2>
+                    <p>This service makes requests to:</p>
+                    <ul>
+                        <li><strong>Discogs API:</strong> To fetch your collection and release data</li>
+                        <li><strong>YouTube:</strong> To embed and play videos</li>
+                    </ul>
+                    <p>These services have their own privacy policies and data handling practices.</p>
+                    
+                    <h2>4. No Server-Side Data Storage</h2>
+                    <p>We do not have a backend server that stores user data. All functionality runs in your browser, and your data never leaves your device except when making API calls to Discogs and YouTube.</p>
+                    
+                    <h2>5. Cookies</h2>
+                    <p>We do not use cookies. All preferences are stored using browser localStorage.</p>
+                    
+                    <h2>6. Data Security</h2>
+                    <p>Since we don't store data on servers, your information is as secure as your local browser storage. We recommend keeping your API tokens private and not sharing them.</p>
+                    
+                    <h2>7. Changes to This Policy</h2>
+                    <p>As this is a hobby project, this privacy policy may be updated occasionally. Check this page for any changes.</p>
+                    
+                    <p><em>Last updated: August 16, 2025</em></p>
+                </>
+            )
+        },
+        legal: {
+            title: 'Legal Information',
+            content: (
+                <>
+                    <h2>1. Project Status</h2>
+                    <p>Discogs Video Player is a non-profit, open-source hobby project created for educational and personal use purposes. It is not a commercial service and generates no revenue.</p>
+                    
+                    <h2>2. Disclaimers</h2>
+                    <p>This service is provided "as is" without any warranties, express or implied. We make no guarantees about:</p>
+                    <ul>
+                        <li>Service availability or uptime</li>
+                        <li>Accuracy of data retrieved from third-party APIs</li>
+                        <li>Compatibility with all browsers or devices</li>
+                        <li>Continued functionality or support</li>
+                    </ul>
+                    
+                    <h2>3. Third-Party Content</h2>
+                    <p>All music releases, artwork, and video content displayed through this service belong to their respective copyright holders. This service merely provides a interface to view publicly available information from Discogs and YouTube.</p>
+                    
+                    <h2>4. API Usage</h2>
+                    <p>This service uses the Discogs API and YouTube API in accordance with their respective terms of service. Users are responsible for complying with these terms when using their own API tokens.</p>
+                    
+                    <h2>5. Limitation of Liability</h2>
+                    <p>The creator of this hobby project shall not be liable for any damages arising from the use or inability to use this service, including but not limited to data loss, service interruptions, or any other issues.</p>
+                    
+                    <h2>6. Intellectual Property</h2>
+                    <p>The source code of this project may be made available under an open-source license. All third-party trademarks, logos, and content remain the property of their respective owners.</p>
+                    
+                    <h2>7. Contact and Takedown Requests</h2>
+                    <p>If you believe this service infringes on your rights or have concerns about its operation, please contact the project maintainer through the appropriate channels.</p>
+                    
+                    <p><em>Last updated: August 16, 2025</em></p>
+                </>
+            )
+        }
+    };
+
+    const openModal = (type) => {
+        setModalContent(modalData[type]);
+    };
+
+    const closeModal = () => {
+        setModalContent(null);
+    };
+
     const loadTestRelease = async () => {
         setLoading(true);
         setRelease(null);
@@ -1016,13 +1129,27 @@ function App() {
             <div className="footer-content">
                 <span id="copyright-year">© 2025 Discogs Video Player</span>
                 <span>•</span>
-                <a href="terms.html" className="footer-link">Terms of Service</a>
+                <a href="#" className="footer-link" onClick={(e) => { e.preventDefault(); openModal('terms'); }}>Terms of Service</a>
                 <span>•</span>
-                <a href="privacy.html" className="footer-link">Privacy Policy</a>
+                <a href="#" className="footer-link" onClick={(e) => { e.preventDefault(); openModal('privacy'); }}>Privacy Policy</a>
                 <span>•</span>
-                <a href="legal.html" className="footer-link">Legal</a>
+                <a href="#" className="footer-link" onClick={(e) => { e.preventDefault(); openModal('legal'); }}>Legal</a>
             </div>
         </footer>
+        
+        {modalContent && (
+            <div className="modal-overlay" onClick={closeModal}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                        <h1 className="modal-title">{modalContent.title}</h1>
+                        <button className="modal-close" onClick={closeModal}>×</button>
+                    </div>
+                    <div className="modal-body">
+                        {modalContent.content}
+                    </div>
+                </div>
+            </div>
+        )}
         </>
     );
 }
