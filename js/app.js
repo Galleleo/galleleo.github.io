@@ -30,8 +30,8 @@ function App() {
     const [currentReleaseMode, setCurrentReleaseMode] = useState(null);
 
     const handleVideoEnd = useCallback(() => {
-        console.log('handleVideoEnd called, currentVideoIndex:', currentVideoIndex, 'videos.length:', videos.length);
-        console.log('Shuffle:', shuffle, 'Random Next:', randomNext);
+        // console.log('handleVideoEnd called, currentVideoIndex:', currentVideoIndex, 'videos.length:', videos.length);
+        // console.log('Shuffle:', shuffle, 'Random Next:', randomNext);
         
         let nextIndex;
         if (shuffle) {
@@ -1166,7 +1166,7 @@ function App() {
         
         <footer className="footer">
             <div className="footer-content">
-                <span id="copyright-year">© 2025 Discogs Video Player</span>
+                <span id="copyright-year">© 2026 Discogs Video Player</span>
                 <span>•</span>
                 <a href="#" className="footer-link" onClick={(e) => { e.preventDefault(); openModal('terms'); }}>Terms of Service</a>
                 <span>•</span>
