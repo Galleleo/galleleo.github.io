@@ -28,6 +28,7 @@ function App() {
     const [imageModal, setImageModal] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [currentReleaseMode, setCurrentReleaseMode] = useState(null);
+    const [playingVideoId, setPlayingVideoId] = useState(null);
 
     const handleVideoEnd = useCallback(() => {
         // console.log('handleVideoEnd called, currentVideoIndex:', currentVideoIndex, 'videos.length:', videos.length);
@@ -113,9 +114,11 @@ function App() {
                     events: {
                         'onStateChange': (event) => {
                             if (event.data === window.YT.PlayerState.PLAYING) {
-                                // Update current video index
-                                const playingIndex = videos.findIndex(v => `iframe-${v.id}` === event.target.getIframe().id);
+                                // Update current video index and playing ID
+                                const iframeId = event.target.getIframe().id;
+                                const playingIndex = videos.findIndex(v => `iframe-${v.id}` === iframeId);
                                 if (playingIndex !== -1) setCurrentVideoIndex(playingIndex);
+                                setPlayingVideoId(iframeId.replace('iframe-', ''));
                                 
                                 newPlayers.forEach((p) => {
                                     if (p.getPlayerState() === window.YT.PlayerState.PLAYING && 
@@ -255,6 +258,7 @@ function App() {
         setLoading(true);
         setRelease(null);
         setVideos([]);
+        setPlayingVideoId(null);
         document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
 
         try {
@@ -397,135 +401,147 @@ function App() {
 
     const matchVideoToTrack = (videoTitle, tracklist) => {
         if (!tracklist || !videoTitle || !release) return null;
-        
-        // Clean video title: remove Audiosurf prefix and file extensions
+
+        // Pre-process: strip YouTube-specific clutter BEFORE any matching
         let cleanedTitle = videoTitle
             .replace(/^audiosurf:\s*/i, '')
             .replace(/\.(mp4|avi|mov|wmv|flv|webm)$/i, '')
+            // Strip feat/ft/featuring (with or without surrounding brackets)
+            .replace(/\s*[\(\[]?(?:ft\.?|feat\.?|featuring)\s+[^\)\]\-,]+[\)\]]?/gi, '')
+            // Strip resolution/quality markers
+            .replace(/\b(?:hd|hq|4k|uhd|1080p|720p|480p|360p)\b/gi, '')
+            // Strip common YouTube labels inside or outside brackets
+            .replace(/[\(\[]\s*official\s+(?:audio|video|music\s*video|lyric\s*video|clip)\s*[\)\]]/gi, '')
+            .replace(/\bofficial\s+(?:audio|video|music\s*video|lyric\s*video|clip)\b/gi, '')
+            .replace(/[\(\[]\s*lyrics?\s*(?:video)?\s*[\)\]]/gi, '')
+            .replace(/[\(\[]\s*audio\s*[\)\]]/gi, '')
             .trim();
-        
-        // For Various Artists releases, try to match individual track artists
+
         const isVariousArtists = release.artists && release.artists.some(a => a.name.toLowerCase().includes('various'));
-        
+
+        const normalizeForMatching = (str) => {
+            return str.toLowerCase()
+                .replace(/_/g, ' ')
+                .replace(/\s*\/\s*/g, ' ')
+                .replace(/\s+versus\s+/g, ' ')
+                .replace(/\s+vs\.?\s+/g, ' ')
+                .replace(/\([^)]*\)/g, '')
+                .replace(/\[[^\]]*\]/g, '')
+                .replace(/&/g, 'and')
+                .replace(/\b(the|a|an)\s+/g, '')
+                .replace(/'/g, '')
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        };
+
+        const normalizeAccents = (str) => {
+            return str.normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9\s]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        };
+
+        // What fraction of targetStr's words appear in sourceStr
+        const wordOverlapScore = (targetStr, sourceStr) => {
+            const targetWords = targetStr.split(' ').filter(w => w.length > 2);
+            const sourceSet = new Set(sourceStr.split(' ').filter(w => w.length > 2));
+            if (targetWords.length === 0 || sourceSet.size === 0) return 0;
+            return targetWords.filter(w => sourceSet.has(w)).length / targetWords.length;
+        };
+
         let bestMatch = null;
         let bestScore = 0;
-        
+
         tracklist.forEach(track => {
             if (!track.title) return;
-            
-            // For Various Artists, use track-specific artist if available (raw names for matching)
+
             let expectedTitle;
             if (isVariousArtists && track.artists && track.artists.length > 0) {
                 const trackArtist = track.artists.map(a => a.name).join(' Vs. ');
                 expectedTitle = `${trackArtist} - ${track.title}`;
-                
-
             } else {
                 const releaseArtist = release.artists ? release.artists.map(a => a.name).join(', ') : '';
                 expectedTitle = `${releaseArtist} - ${track.title}`;
             }
-            
-            // Normalize both titles and handle Vs./slash/versus variations
-            const normalizeForMatching = (str) => {
-                return str.toLowerCase()
-                    .replace(/_/g, ' ')                           // Replace underscores with spaces
-                    .replace(/\s*\/\s*/g, ' ')                    // Remove slashes
-                    .replace(/\s+versus\s+/g, ' ')                // Remove versus
-                    .replace(/\s+vs\.?\s+/g, ' ')                 // Remove vs variations
-                    .replace(/\(official\s+(audio|video)\)/g, '') // Remove (Official Audio/Video)
-                    .replace(/\[official\s+video\]/g, '')         // Remove [Official Video]
-                    .replace(/\((cd|vinyl\s+rip|rip)\)/g, '')     // Remove (CD), (Vinyl RIP), (RIP)
-                    .replace(/\([^)]*\)/g, '')                    // Remove remaining parentheses content
-                    .replace(/\[[^\]]*\]/g, '')                   // Remove square brackets content
-                    .replace(/\b(the|a|an)\s+/g, '')             // Remove filler words
-                    .replace(/'/g, '')                            // Remove apostrophes (trippin' = trippin)
-                    .replace(/\s+/g, ' ')                         // Normalize spaces
-                    .trim();
-            };
-            
-            const normalizedVideo = normalizeForMatching(cleanedTitle);
-            const normalizedExpected = normalizeForMatching(expectedTitle);
-            
-            // Exact match
-            if (normalizedVideo === normalizedExpected) {
-                bestScore = 1.0;
-                bestMatch = track;
-                return;
+
+            const normVideo    = normalizeForMatching(cleanedTitle);
+            const normExpected = normalizeForMatching(expectedTitle);
+
+            // 1.0 \u2013 exact
+            if (normVideo === normExpected) {
+                bestScore = 1.0; bestMatch = track; return;
             }
-            
-            // Normalize accents and clean
-            const normalizeAccents = (str) => {
-                return str.normalize('NFD')
-                    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-                    .replace(/[^a-z0-9\s]/g, '')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-            };
-            
-            // Fuzzy match for remixes - remove feat/featuring and remix info
-            const fuzzyCleanVideo = normalizeForMatching(cleanedTitle);
-            const fuzzyCleanExpected = normalizeForMatching(expectedTitle);
-            
-            const cleanTitle = normalizeAccents(normalizedVideo);
-            const cleanExpected = normalizeAccents(normalizedExpected);
-            const fuzzyVideoNorm = normalizeAccents(fuzzyCleanVideo);
-            const fuzzyExpectedNorm = normalizeAccents(fuzzyCleanExpected);
-            
-            if (cleanTitle === cleanExpected) {
-                bestScore = 0.95;
-                bestMatch = track;
-                return;
+
+            const accentVideo    = normalizeAccents(normVideo);
+            const accentExpected = normalizeAccents(normExpected);
+
+            // 0.95 \u2013 accent-normalized exact
+            if (accentVideo === accentExpected && 0.95 > bestScore) {
+                bestScore = 0.95; bestMatch = track; return;
             }
-            
-            // Check if video contains track title and artist
-            const cleanTrack = track.title.toLowerCase()
-                .replace(/[^a-z0-9\s]/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
-            
-            // Extract artist from expected title for better matching
-            const artistPart = expectedTitle.split(' - ')[0].toLowerCase()
-                .replace(/[^a-z0-9\s]/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
-            
-            // Check if video contains both artist and track title
-            if (cleanTitle.includes(cleanTrack) && cleanTitle.includes(artistPart)) {
-                bestScore = 0.9;
-                bestMatch = track;
-                return;
+
+            const cleanTrack  = normalizeAccents(normalizeForMatching(track.title));
+            const cleanArtist = normalizeAccents(normalizeForMatching(expectedTitle.split(' - ')[0]));
+
+            // 0.9 \u2013 video contains both artist and track title
+            if (cleanTrack.length > 2 && cleanArtist.length > 0 &&
+                accentVideo.includes(cleanTrack) && accentVideo.includes(cleanArtist) && 0.9 > bestScore) {
+                bestScore = 0.9; bestMatch = track; return;
             }
-            
-            if (fuzzyVideoNorm === fuzzyExpectedNorm) {
-                bestScore = 0.7;
-                bestMatch = { ...track, isUncertain: true };
-                return;
+
+            // 0.75 \u2013 track title is a substring of video title
+            if (cleanTrack.length > 3 && accentVideo.includes(cleanTrack) && 0.75 > bestScore) {
+                bestScore = 0.75; bestMatch = { ...track, isUncertain: true }; return;
             }
-            
-            // For Various Artists, try matching just the track title without artist
+
+            // Various Artists: exact track-title-only match (no artist)
             if (isVariousArtists) {
                 const trackOnlyFuzzy = normalizeAccents(track.title.toLowerCase()
-                    .replace(/\([^)]*remix[^)]*\)/gi, '')
-                    .replace(/\([^)]*mix[^)]*\)/gi, '')
+                    .replace(/\([^)]*(?:remix|mix)[^)]*\)/gi, '')
+                    .replace(/[^a-z0-9\s]/g, ' ')
+                    .replace(/\s+/g, ' ')
                     .trim());
-                
-                if (fuzzyVideoNorm === trackOnlyFuzzy) {
-                    bestScore = 0.65;
-                    bestMatch = { ...track, isUncertain: true };
+                if (trackOnlyFuzzy.length > 3 && accentVideo === trackOnlyFuzzy && 0.65 > bestScore) {
+                    bestScore = 0.65; bestMatch = { ...track, isUncertain: true }; return;
+                }
+            }
+
+            // Word-overlap: full expected title (artist + track)
+            const overlapFull = wordOverlapScore(accentExpected, accentVideo);
+            if (overlapFull > 0.8) {
+                const score = overlapFull * 0.85;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = { ...track, isUncertain: overlapFull < 0.95 };
+                }
+                return;
+            }
+
+            // Word-overlap: track title only (needs \u22652 meaningful words to avoid false positives)
+            const trackWordCount = cleanTrack.split(' ').filter(w => w.length > 2).length;
+            if (trackWordCount >= 2) {
+                const overlapTrack = wordOverlapScore(cleanTrack, accentVideo);
+                if (overlapTrack > 0.8) {
+                    const score = overlapTrack * 0.72;
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMatch = { ...track, isUncertain: true };
+                    }
                     return;
                 }
             }
-            
-            // Fallback: check if video contains track title
-            if (cleanTitle.includes(cleanTrack) || cleanTrack.includes(cleanTitle)) {
-                const score = Math.min(cleanTrack.length, cleanTitle.length) / Math.max(cleanTrack.length, cleanTitle.length) * 0.8;
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestMatch = track;
-                }
+
+            // Fallback: simple containment ratio
+            if (cleanTrack.length > 2 &&
+                (accentVideo.includes(cleanTrack) || cleanTrack.includes(accentVideo))) {
+                const score = Math.min(cleanTrack.length, accentVideo.length) /
+                              Math.max(cleanTrack.length, accentVideo.length) * 0.8;
+                if (score > bestScore) { bestScore = score; bestMatch = track; }
             }
         });
-        
+
         return bestScore > 0.5 ? bestMatch : null;
     };
 
@@ -1102,10 +1118,11 @@ function App() {
                                 <div className="video-grid">
                                     {videos.map((video, index) => {
                                         const matchedTrack = matchVideoToTrack(video.title, release.tracklist);
+                                        const isNowPlaying = playingVideoId === video.id;
                                         return (
-                                            <div 
-                                                key={video.id} 
-                                                className="video-item"
+                                            <div
+                                                key={video.id}
+                                                className={`video-item${isNowPlaying ? ' now-playing' : ''}`}
                                                 draggable
                                                 onDragStart={(e) => {
                                                     e.dataTransfer.setData('text/plain', index);
@@ -1131,6 +1148,7 @@ function App() {
                                                 }}
                                             >
                                                 <div className="video-header">
+                                                    {isNowPlaying && <div className="now-playing-badge">▶ Now Playing</div>}
                                                     <div className="video-title">{video.title}</div>
                                                     <div className="track-match">
                                                         {matchedTrack ? (
@@ -1212,6 +1230,18 @@ function App() {
             </div>
         )}
         
+        {release && (
+            <button
+                className="mobile-next-btn"
+                onClick={getRandomReleaseWithVideos}
+                disabled={loading}
+                aria-label="Next random release"
+                title="Next random release"
+            >
+                {loading ? '🔄' : '⏭'}
+            </button>
+        )}
+
         {imageModal && (
             <div className="modal-overlay" onClick={() => setImageModal(null)}>
                 <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{width: '40%', maxHeight: '90vh', padding: '0', position: 'relative'}}>
