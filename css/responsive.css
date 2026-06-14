@@ -164,13 +164,15 @@
     }
 }
 
-/* ── Hide Ko-fi widget on mobile (overlaps footer) ───────── */
+/* ── Ko-fi widget: dezenter auf Mobile ───────────────────── */
 @media (max-width: 768px) {
     .floatingchat-container-wrap,
     #floatingchat-container-wrap,
-    [class*="floatingchat"],
-    [id*="kofi-widget"] {
-        display: none !important;
+    [class*="floatingchat"] {
+        transform: scale(0.72) !important;
+        transform-origin: bottom left !important;
+        bottom: 48px !important;
+        opacity: 0.85 !important;
     }
 }
 
