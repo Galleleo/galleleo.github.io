@@ -1175,7 +1175,7 @@ function App() {
         
         <footer className="footer">
             <div className="footer-content">
-                <span id="copyright-year">© 2026 Discogs Video Player</span>
+                <span>© {new Date().getFullYear()} Discogs Video Player</span>
                 <span>•</span>
                 <a href="#" className="footer-link" onClick={(e) => { e.preventDefault(); openModal('terms'); }}>Terms of Service</a>
                 <span>•</span>

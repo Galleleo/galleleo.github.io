@@ -6,9 +6,4 @@ document.addEventListener('DOMContentLoaded', function() {
     if (lastUpdatedElement) {
         lastUpdatedElement.textContent = `Last updated: ${LAST_UPDATED}`;
     }
-    
-    const copyrightElement = document.getElementById('copyright-year');
-    if (copyrightElement) {
-        copyrightElement.textContent = `© ${CURRENT_YEAR} Discogs Video Player`;
-    }
 });
