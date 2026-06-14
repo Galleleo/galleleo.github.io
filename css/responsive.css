@@ -164,6 +164,41 @@
     }
 }
 
+/* ── Hide Ko-fi widget on mobile (overlaps footer) ───────── */
+@media (max-width: 768px) {
+    .floatingchat-container-wrap,
+    #floatingchat-container-wrap,
+    [class*="floatingchat"],
+    [id*="kofi-widget"] {
+        display: none !important;
+    }
+}
+
+/* ── Footer cleanup on mobile ────────────────────────────── */
+@media (max-width: 768px) {
+    .footer {
+        padding: 10px 0;
+    }
+
+    .footer-content {
+        font-size: 0.75rem;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 0 12px;
+    }
+
+    /* Hide copyright text on mobile to save space */
+    .footer-content > span:first-child {
+        display: none;
+    }
+
+    /* Hide the bullet after copyright too */
+    .footer-content > span:nth-child(2) {
+        display: none;
+    }
+}
+
 /* ── Mobile floating "next release" button ───────────────── */
 .mobile-next-btn {
     display: none;

@@ -1098,22 +1098,13 @@ function App() {
                         {videos.length > 0 && (
                             <div className="videos-section">
                                 <div className="videos-header">
-                                    <h3>🎥 Videos ({videos.length})</h3>
-                                    <div>
-                                        <button 
-                                            className="save-order-btn" 
-                                            onClick={saveVideoOrder}
-                                        >
-                                            💾 Save Order
-                                        </button>
-                                        <button 
-                                            className="refresh-btn" 
-                                            onClick={refreshCurrentRelease}
-                                            disabled={loading}
-                                        >
-                                            🔄 Refresh
-                                        </button>
-                                    </div>
+                                    <button
+                                        className="refresh-btn"
+                                        onClick={refreshCurrentRelease}
+                                        disabled={loading}
+                                    >
+                                        🔄 Refresh
+                                    </button>
                                 </div>
                                 <div className="video-grid">
                                     {videos.map((video, index) => {
