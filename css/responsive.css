@@ -14,7 +14,7 @@
 
 @media (max-width: 1024px) {
     .container { padding: 15px 15px 80px 15px; }
-    .header { 
+    .header {
         grid-template-columns: 1fr;
         text-align: center;
         gap: 15px;
@@ -32,5 +32,171 @@
     .options-row {
         grid-template-columns: 1fr;
         justify-items: center;
+    }
+}
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px 10px 140px 10px;
+    }
+
+    /* Reorder header: album art → title → controls */
+    .header {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        min-height: auto;
+        text-align: center;
+    }
+    .header-cover  { order: 1; justify-content: center; }
+    .header-release { order: 2; padding: 0; }
+    .header-controls { order: 3; align-items: stretch; }
+
+    .header-cover .cover-art {
+        max-width: 130px !important;
+        max-height: 130px !important;
+        border-radius: 10px !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
+    }
+
+    .header-release-title {
+        font-size: 1.1rem;
+    }
+
+    /* Bigger touch targets */
+    .btn, .toggle-btn {
+        height: 44px !important;
+        font-size: 14px !important;
+        padding: 0 16px !important;
+        min-width: unset !important;
+        border-radius: 8px !important;
+    }
+
+    /* Prevent iOS zoom on input focus (font-size must be >= 16px) */
+    .input-group input,
+    input[type="text"] {
+        font-size: 16px !important;
+        height: 44px !important;
+        padding: 0 12px !important;
+        width: 100% !important;
+        border-radius: 8px !important;
+    }
+
+    .input-group {
+        width: 100%;
+    }
+
+    .user-row {
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+
+    .user-row .btn {
+        max-width: unset !important;
+        flex: 0 0 auto;
+    }
+
+    .token-row {
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+
+    /* Bigger checkboxes */
+    .checkbox-group input[type="checkbox"] {
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px;
+        cursor: pointer;
+    }
+
+    .checkbox-group label {
+        font-size: 0.85rem !important;
+        cursor: pointer;
+    }
+
+    .options-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        justify-items: start;
+    }
+
+    /* Release card */
+    .release-content {
+        grid-template-columns: 1fr !important;
+        padding: 16px !important;
+        gap: 16px !important;
+    }
+
+    /* Videos: full-width single column, remove fixed max-height so all load */
+    .videos-section {
+        max-height: none !important;
+        overflow-y: visible !important;
+    }
+
+    .video-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    .video-iframe {
+        height: 220px !important;
+    }
+}
+
+/* ── Small phones ────────────────────────────────────────── */
+@media (max-width: 480px) {
+    .header {
+        padding: 12px;
+    }
+
+    .header-cover .cover-art {
+        max-width: 110px !important;
+        max-height: 110px !important;
+    }
+
+    .header-release-title {
+        font-size: 1rem;
+    }
+
+    .footer-content {
+        font-size: 0.75rem;
+        gap: 8px;
+    }
+}
+
+/* ── Mobile floating "next release" button ───────────────── */
+.mobile-next-btn {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-next-btn {
+        display: flex;
+        position: fixed;
+        bottom: 68px;
+        right: 16px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 22px;
+        border: none;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.55);
+        z-index: 999;
+        transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .mobile-next-btn:active:not(:disabled) {
+        transform: scale(0.93);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    .mobile-next-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
     }
 }
