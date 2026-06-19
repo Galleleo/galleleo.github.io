@@ -93,6 +93,12 @@ function App() {
     }, [videos]);
 
     useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const releaseId = params.get('releaseId');
+        if (releaseId) loadReleaseById(releaseId);
+    }, []);
+
+    useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'Escape') {
                 if (imageModal) setImageModal(null);
@@ -308,7 +314,8 @@ function App() {
                     
                     setStatus({ type: '', message: '' });
                     setLoading(false);
-                    
+                    history.replaceState(null, '', `?releaseId=${releaseDetails.id}`);
+
                     // Trigger autoplay for new release
                     if (autoplay) {
                         setTimeout(() => {
@@ -347,6 +354,40 @@ function App() {
             setStatus({ type: '', message: '' });
         } catch (error) {
             setStatus({ type: 'error', message: `Error refreshing: ${error.message}` });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadReleaseById = async (releaseId) => {
+        setLoading(true);
+        setRelease(null);
+        setVideos([]);
+        setPlayingVideoId(null);
+        setStatus({ type: 'loading', message: 'Loading release...' });
+        document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+
+        try {
+            const releaseDetails = await getReleaseDetails(releaseId, token || null);
+            const extractedVideos = extractYouTubeVideos(releaseDetails);
+
+            if (extractedVideos.length === 0) {
+                setStatus({ type: 'error', message: 'No YouTube videos found for this release' });
+                return;
+            }
+
+            setRelease(releaseDetails);
+            setVideos(loadSavedOrder(extractedVideos, releaseDetails.id));
+            setCollectionItem(null);
+            setRating(0);
+            setCurrentVideoIndex(0);
+            setPlayedVideos(new Set());
+            setCurrentReleaseMode(null);
+            setMarketplaceData(null);
+            setStatus({ type: '', message: '' });
+            history.replaceState(null, '', `?releaseId=${releaseDetails.id}`);
+        } catch (error) {
+            setStatus({ type: 'error', message: `Error loading release: ${error.message}` });
         } finally {
             setLoading(false);
         }
