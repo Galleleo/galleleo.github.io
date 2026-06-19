@@ -520,17 +520,23 @@ function App() {
             const normVideo    = normalizeForMatching(cleanedTitle);
             const normExpected = normalizeForMatching(expectedTitle);
 
-            // 1.0 \u2013 exact
+            // 1.0 \u2013 exact; penalise when mix info is present on one side only
             if (normVideo === normExpected) {
-                bestScore = 1.0; bestMatch = track; return;
+                const s = (videoMix === trackMix) ? 1.0 : (!videoMix && trackMix) ? 0.78 : 0.90;
+                const u = videoMix !== trackMix;
+                if (s > bestScore) { bestScore = s; bestMatch = u ? { ...track, isUncertain: true } : track; }
+                return;
             }
 
             const accentVideo    = normalizeAccents(normVideo);
             const accentExpected = normalizeAccents(normExpected);
 
-            // 0.95 \u2013 accent-normalized exact
-            if (accentVideo === accentExpected && 0.95 > bestScore) {
-                bestScore = 0.95; bestMatch = track; return;
+            // 0.95 \u2013 accent-normalised exact; same mix-info penalty
+            if (accentVideo === accentExpected) {
+                const s = (videoMix === trackMix) ? 0.95 : (!videoMix && trackMix) ? 0.74 : 0.86;
+                const u = videoMix !== trackMix;
+                if (s > bestScore) { bestScore = s; bestMatch = u ? { ...track, isUncertain: true } : track; }
+                return;
             }
 
             const cleanTrack  = normalizeAccents(normalizeForMatching(track.title));
@@ -542,16 +548,21 @@ function App() {
                 bestScore = 0.9; bestMatch = track; return;
             }
 
-            // 0.88 \u2013 video title is exactly the track title (artist prefix absent from video).
-            // Mix guard already confirmed compatible mix info, so this is a confident match.
+            // 0.88 \u2013 video is the bare track title, no artist prefix (mix-aware)
             const normTrackOnly   = normalizeForMatching(track.title);
             const accentTrackOnly = normalizeAccents(normTrackOnly);
-            if (normTrackOnly.length > 2 && normVideo === normTrackOnly && 0.88 > bestScore) {
-                bestScore = 0.88; bestMatch = track; return;
+            if (normTrackOnly.length > 2 && normVideo === normTrackOnly) {
+                const s = (videoMix === trackMix) ? 0.88 : (!videoMix && trackMix) ? 0.69 : 0.80;
+                const u = videoMix !== trackMix;
+                if (s > bestScore) { bestScore = s; bestMatch = u ? { ...track, isUncertain: true } : track; }
+                return;
             }
-            // 0.83 \u2013 same as above but accent-normalised
-            if (accentTrackOnly.length > 2 && accentVideo === accentTrackOnly && 0.83 > bestScore) {
-                bestScore = 0.83; bestMatch = track; return;
+            // 0.83 \u2013 accent-normalised track-title-only (mix-aware)
+            if (accentTrackOnly.length > 2 && accentVideo === accentTrackOnly) {
+                const s = (videoMix === trackMix) ? 0.83 : (!videoMix && trackMix) ? 0.65 : 0.75;
+                const u = videoMix !== trackMix;
+                if (s > bestScore) { bestScore = s; bestMatch = u ? { ...track, isUncertain: true } : track; }
+                return;
             }
 
             // 0.75 \u2013 track title is a substring of video title (uncertain)
