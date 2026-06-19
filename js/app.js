@@ -498,6 +498,16 @@ function App() {
         tracklist.forEach(track => {
             if (!track.title) return;
 
+            // Guard: if both sides carry explicit mix/remix/version info and it differs,
+            // this is a different version of the track — skip before any fuzzy path fires.
+            const extractMix = (s) => {
+                const m = s.match(/\(([^)]*(?:remix|mix|edit|dub|version|live|instrumental|acapella|a cappella)[^)]*)\)/i);
+                return m ? m[1].toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim() : null;
+            };
+            const videoMix = extractMix(cleanedTitle);
+            const trackMix = extractMix(track.title);
+            if (videoMix && trackMix && videoMix !== trackMix) return;
+
             let expectedTitle;
             if (isVariousArtists && track.artists && track.artists.length > 0) {
                 const trackArtist = track.artists.map(a => a.name).join(' Vs. ');
