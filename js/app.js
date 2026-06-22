@@ -378,14 +378,57 @@ function App() {
 
             setRelease(releaseDetails);
             setVideos(loadSavedOrder(extractedVideos, releaseDetails.id));
-            setCollectionItem(null);
-            setRating(0);
             setCurrentVideoIndex(0);
             setPlayedVideos(new Set());
-            setCurrentReleaseMode(null);
             setMarketplaceData(null);
             setStatus({ type: '', message: '' });
             history.replaceState(null, '', `?releaseId=${releaseDetails.id}`);
+
+            // Fetch collection context so Media / Sleeve / Rating are shown after reload
+            if (token && username) {
+                try {
+                    const collData = await fetchDiscogs(
+                        `https://api.discogs.com/users/${username}/collection/releases/${releaseId}`,
+                        token
+                    );
+                    if (collData.releases && collData.releases.length > 0) {
+                        const item = collData.releases[0];
+                        setCollectionItem(item);
+                        setRating(item.rating || 0);
+                        setCurrentReleaseMode('collection');
+                    } else {
+                        // Not in collection – check wantlist
+                        try {
+                            const wantData = await fetchDiscogs(
+                                `https://api.discogs.com/users/${username}/wants/${releaseId}`,
+                                token
+                            );
+                            if (wantData && wantData.id) {
+                                setCollectionItem(wantData);
+                                setCurrentReleaseMode('wantlist');
+                                const marketplace = await getMarketplaceData(releaseId, token);
+                                setMarketplaceData(marketplace);
+                            } else {
+                                setCollectionItem(null);
+                                setRating(0);
+                                setCurrentReleaseMode(null);
+                            }
+                        } catch {
+                            setCollectionItem(null);
+                            setRating(0);
+                            setCurrentReleaseMode(null);
+                        }
+                    }
+                } catch {
+                    setCollectionItem(null);
+                    setRating(0);
+                    setCurrentReleaseMode(null);
+                }
+            } else {
+                setCollectionItem(null);
+                setRating(0);
+                setCurrentReleaseMode(null);
+            }
         } catch (error) {
             setStatus({ type: 'error', message: `Error loading release: ${error.message}` });
         } finally {
